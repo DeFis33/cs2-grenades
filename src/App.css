@@ -807,7 +807,11 @@ kbd {
 @media (max-width: 1024px) {
   .map-container {
     width: 100%;
-    max-width: 800px;
+    max-width: 100%;
+  }
+
+  .map-image {
+    border-radius: 0;
   }
 
   .side-panel {
@@ -825,7 +829,17 @@ kbd {
   }
 
   .main {
-    padding: 10px;
+    padding: 0;
+    align-items: flex-start;
+  }
+
+  .map-wrapper {
+    width: 100%;
+  }
+
+  .map-image {
+    max-height: calc(100vh - 56px);
+    object-fit: contain;
   }
 }
 
@@ -865,13 +879,24 @@ kbd {
     gap: 6px;
   }
 
+  .main {
+    padding: 0;
+    align-items: flex-start;
+  }
+
+  .map-wrapper {
+    width: 100%;
+  }
+
   .map-container {
     width: 100%;
-    border-radius: 8px;
+    border-radius: 0;
   }
 
   .map-image {
-    border-radius: 8px;
+    border-radius: 0;
+    max-height: calc(100vh - 52px);
+    object-fit: contain;
   }
 
   .marker {
@@ -890,7 +915,7 @@ kbd {
     font-size: 11px;
   }
 
-  /* Меню гранат - адаптивное позиционирование */
+  /* Меню гранат */
   .granade-option {
     width: 36px;
     height: 36px;
@@ -1011,6 +1036,14 @@ kbd {
     height: 18px;
   }
 
+  .main {
+    padding: 0;
+  }
+
+  .map-image {
+    max-height: calc(100vh - 44px);
+  }
+
   .marker {
     width: 22px;
     height: 22px;
@@ -1040,16 +1073,12 @@ kbd {
     max-height: 55vh;
     border-radius: 12px 12px 0 0;
   }
-
-  .main {
-    padding: 6px;
-  }
 }
 
 /* Touch-устройства */
 @media (hover: none) and (pointer: coarse) {
   .marker:hover {
-    transform: translate(-50%, -50%) scale(1); /* Убираем hover-эффекты на тачскринах */
+    transform: translate(-50%, -50%) scale(1);
   }
 
   .granade-option:hover {
@@ -1057,10 +1086,10 @@ kbd {
   }
 
   .guide-container:hover .guide-dropdown {
-    display: none; /* Отключаем hover на тачскринах */
+    display: none;
   }
 
   .guide-container.active .guide-dropdown {
-    display: block; /* Только по клику */
+    display: block;
   }
 }
