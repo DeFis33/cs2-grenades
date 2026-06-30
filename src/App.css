@@ -7,7 +7,6 @@
 html {
   background-color: #0f0f1a;
   height: 100%;
-  overflow: hidden;
 }
 
 body {
@@ -15,7 +14,6 @@ body {
   background-color: #0f0f1a;
   min-height: 100vh;
   min-height: -webkit-fill-available; /* Для iOS Safari */
-  overflow: hidden;
 }
 
 #root {
@@ -896,7 +894,6 @@ kbd {
   }
 
   .main {
-    padding: 0;
     align-items: flex-start;
   }
 
@@ -1050,10 +1047,6 @@ kbd {
   .guide-icon-img {
     width: 18px;
     height: 18px;
-  }
-
-  .main {
-    padding: 0;
   }
 
   .map-image {
