@@ -776,3 +776,27 @@ kbd {
   font-size: 14px;
   color: #a0aec0;
 }
+
+.video-url-block {
+  margin-top: 0;
+}
+
+.video-url-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  border: 2px solid #4a5568;
+  border-radius: 8px;
+  background-color: #0f0f1a;
+  color: white;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.video-url-input::placeholder {
+  color: #718096;
+}
+
+.video-url-input:focus {
+  border-color: #e94560;
+}

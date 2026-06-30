@@ -30,14 +30,9 @@ const throwTypes = [
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
 
 function App() {
-  const [draggingGroup, setDraggingGroup] = useState(null);
   const [selectedMap, setSelectedMap] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  const [editMode, setEditMode] = useState(() => {
-    return localStorage.getItem('cs2_editor_auth') === 'true';
-  });
-
+  const [editMode, setEditMode] = useState(() => localStorage.getItem('cs2_editor_auth') === 'true');
   const [markers, setMarkers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
@@ -45,10 +40,7 @@ function App() {
   const [loginError, setLoginError] = useState(false);
   const [granadeMenu, setGranadeMenu] = useState(null);
   const [sidePanel, setSidePanel] = useState(null);
-  const [dragOver, setDragOver] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef(null);
-
+  const [wasDragging, setWasDragging] = useState(false);
   const [drawingLine, setDrawingLine] = useState(null);
   const [hoveredMarker, setHoveredMarker] = useState(null);
   const [expandedGroup, setExpandedGroup] = useState(null);
@@ -77,94 +69,53 @@ function App() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleGroupMouseDown = (e, groupKey) => {
-    if (!editMode) return;
-    e.stopPropagation();
-
-    const [gx, gy] = groupKey.split(',').map(Number);
-    const startX = e.clientX;
-    const startY = e.clientY;
-
-    const groupMarkers = markers.filter(m =>
-      m.mapId === selectedMap &&
-      Math.abs(m.x - gx) < 1 &&
-      Math.abs(m.y - gy) < 1
-    );
-
-    const handleMouseMove = (moveEvent) => {
-      const dx = (moveEvent.clientX - startX) / 8;
-      const dy = (moveEvent.clientY - startY) / 6;
-
-      const updated = markers.map(m => {
-        if (groupMarkers.find(gm => gm.id === m.id)) {
-          return {
-            ...m,
-            x: Math.round((m.x + dx) * 100) / 100,
-            y: Math.round((m.y + dy) * 100) / 100,
-            displayX: (m.displayX || m.x) + dx,
-            displayY: (m.displayY || m.y) + dy,
-          };
-        }
-        return m;
-      });
-      setMarkers(updated);
-    };
-
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      saveToFile(markers);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
-
   const saveToFile = useCallback(async (data) => {
-    try {
-      await fetch('http://localhost:3001/api/save-markers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-    } catch (err) {
-      console.log('API сервер не запущен');
-    }
+    try { await fetch('http://localhost:3001/api/save-markers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); } catch (err) { }
   }, []);
 
-  const updateMarkers = (newMarkers) => {
-    setMarkers(newMarkers);
-    saveToFile(newMarkers);
+  const updateMarkers = (newMarkers) => { setMarkers(newMarkers); saveToFile(newMarkers); };
+
+  // НОВАЯ ЛОГИКА: пересчитать все display в группе
+  const recalculateGroup = (markersArray, groupX, groupY, mapId) => {
+    const groupMembers = markersArray
+      .filter(m => m.mapId === mapId && Math.abs(m.x - groupX) < 1.5 && Math.abs(m.y - groupY) < 1.5)
+      .sort((a, b) => a.id - b.id); // Сортируем по id для стабильности
+
+    return markersArray.map(m => {
+      const idx = groupMembers.findIndex(gm => gm.id === m.id);
+      if (idx !== -1) {
+        return { ...m, displayX: groupX + idx * 4, displayY: groupY };
+      }
+      return m;
+    });
+  };
+
+  const collapseGroup = (groupKey) => {
+    if (!groupKey) return;
+    const [gx, gy] = groupKey.split(',').map(Number);
+    const collapsed = markers.map(m => {
+      if (Math.abs(m.x - gx) < 1.5 && Math.abs(m.y - gy) < 1.5) {
+        return { ...m, displayX: gx, displayY: gy, bendX: 0, bendY: 0 };
+      }
+      return m;
+    });
+    updateMarkers(collapsed);
   };
 
   const handleLogin = () => {
-    if (password === ADMIN_PASSWORD) {
-      setEditMode(true);
-      localStorage.setItem('cs2_editor_auth', 'true');
-      setShowLogin(false);
-      setPassword('');
-      setLoginError(false);
-    } else {
-      setLoginError(true);
-    }
+    if (password === ADMIN_PASSWORD) { setEditMode(true); localStorage.setItem('cs2_editor_auth', 'true'); setShowLogin(false); setPassword(''); setLoginError(false); }
+    else { setLoginError(true); }
   };
 
-  const handleLogout = () => {
-    setEditMode(false);
-    localStorage.removeItem('cs2_editor_auth');
-    setGranadeMenu(null);
-    setSidePanel(null);
-    setDrawingLine(null);
-    setExpandedGroup(null);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleLogin();
-    }
-  };
+  const handleLogout = () => { setEditMode(false); localStorage.removeItem('cs2_editor_auth'); setGranadeMenu(null); setSidePanel(null); setDrawingLine(null); setExpandedGroup(null); };
+  const handleKeyDown = (e) => { if (e.key === 'Enter') handleLogin(); };
 
   const handleMapClick = (e) => {
+    if (expandedGroup) {
+      collapseGroup(expandedGroup);
+      setExpandedGroup(null);
+    }
+
     if (!editMode || !selectedMap) return;
     if (e.target.closest('circle')) return;
 
@@ -173,115 +124,64 @@ function App() {
       const rect = e.currentTarget.getBoundingClientRect();
       const toX = ((e.clientX - rect.left) / rect.width) * 100;
       const toY = ((e.clientY - rect.top) / rect.height) * 100;
-
-      const updated = markers.map(m =>
-        m.id === drawingLine.markerId
-          ? { ...m, lineTo: { x: Math.round(toX * 100) / 100, y: Math.round(toY * 100) / 100 } }
-          : m
-      );
-      updateMarkers(updated);
+      updateMarkers(markers.map(m => m.id === drawingLine.markerId ? { ...m, lineTo: { x: Math.round(toX * 100) / 100, y: Math.round(toY * 100) / 100 } } : m));
       setDrawingLine(null);
       return;
     }
-
     if (e.shiftKey) return;
 
     if (e.ctrlKey) {
       e.stopPropagation();
       const rect = e.currentTarget.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-      setGranadeMenu({ x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 });
-      setSidePanel(null);
-      setDrawingLine(null);
-      setExpandedGroup(null);
+      setGranadeMenu({ x: Math.round(((e.clientX - rect.left) / rect.width) * 10000) / 100, y: Math.round(((e.clientY - rect.top) / rect.height) * 10000) / 100 });
+      setSidePanel(null); setDrawingLine(null); setExpandedGroup(null);
       return;
     }
 
     e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-    if (granadeMenu) {
-      setGranadeMenu(null);
-      return;
-    }
-
+    const x = ((e.clientX - rect.left) / rect.width) * 100, y = ((e.clientY - rect.top) / rect.height) * 100;
+    if (granadeMenu) { setGranadeMenu(null); return; }
     setGranadeMenu({ x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 });
-    setSidePanel(null);
-    setDrawingLine(null);
-    setExpandedGroup(null);
+    setSidePanel(null); setDrawingLine(null); setExpandedGroup(null);
   };
 
   const handleSelectGranade = (type, e) => {
     if (!granadeMenu) return;
     e.stopPropagation();
-
-    const samePlace = markers.filter(m =>
-      m.mapId === selectedMap &&
-      Math.abs(m.x - granadeMenu.x) < 1 &&
-      Math.abs(m.y - granadeMenu.y) < 1
-    );
-
-    const offsetIndex = samePlace.length;
-
-    const newMarker = {
-      id: Date.now(),
-      mapId: selectedMap,
-      x: granadeMenu.x,
-      y: granadeMenu.y,
-      displayX: granadeMenu.x + offsetIndex * 4,
-      displayY: granadeMenu.y,
-      type: type,
-      videoUrl: '',
-      lineTo: null,
-      bendX: 0,
-      bendY: 0,
-      throwType: '',
-      side: '',
-    };
-
-    updateMarkers([...markers, newMarker]);
+    const newMarker = { id: Date.now(), mapId: selectedMap, x: granadeMenu.x, y: granadeMenu.y, displayX: granadeMenu.x, displayY: granadeMenu.y, type, videoUrl: '', lineTo: null, bendX: 0, bendY: 0, throwType: '', side: '' };
+    const updated = recalculateGroup([...markers, newMarker], granadeMenu.x, granadeMenu.y, selectedMap);
+    updateMarkers(updated);
     setGranadeMenu(null);
   };
 
+  // НОВАЯ ЛОГИКА УДАЛЕНИЯ
   const handleMarkerRightClick = (e, markerId) => {
     if (!editMode) return;
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
 
     const deleted = markers.find(m => m.id === markerId);
+    if (!deleted) return;
+
+    // Удаляем маркер
     let updated = markers.filter(m => m.id !== markerId);
 
-    if (deleted) {
-      const sameGroup = updated.filter(m =>
-        m.mapId === deleted.mapId &&
-        Math.abs(m.x - deleted.x) < 1 &&
-        Math.abs(m.y - deleted.y) < 1
-      );
-
-      sameGroup.forEach((m, i) => {
-        updated = updated.map(marker =>
-          marker.id === m.id
-            ? { ...marker, displayX: marker.x + i * 4, displayY: marker.y }
-            : marker
-        );
-      });
-    }
+    // Пересчитываем группу
+    updated = recalculateGroup(updated, deleted.x, deleted.y, deleted.mapId);
 
     updateMarkers(updated);
-    setSidePanel(null);
-    setDrawingLine(null);
-    setExpandedGroup(null);
+    setSidePanel(null); setDrawingLine(null); setExpandedGroup(null);
   };
 
   const handleMarkerClick = (e, marker) => {
     e.stopPropagation();
     if (e.defaultPrevented) return;
-
     setGranadeMenu(null);
+
+    if (wasDragging) {
+      setWasDragging(false);
+      return;
+    }
 
     if (editMode && e.ctrlKey) {
       setGranadeMenu({ x: marker.x, y: marker.y });
@@ -289,29 +189,23 @@ function App() {
       setDrawingLine(null);
       return;
     }
-
     if (editMode && e.shiftKey) {
       setDrawingLine({ markerId: marker.id, fromX: marker.x, fromY: marker.y });
       setSidePanel(null);
       setExpandedGroup(null);
       return;
     }
-
-    if (editMode) {
-      setSidePanel({ marker, mode: 'edit' });
-    } else {
-      if (marker.videoUrl) {
-        setSidePanel({ marker, mode: 'view' });
-      }
-    }
+    if (editMode) setSidePanel({ marker, mode: 'edit' });
+    else if (marker.videoUrl) setSidePanel({ marker, mode: 'view' });
   };
 
+  // НОВАЯ ЛОГИКА ПЕРЕТАСКИВАНИЯ
   const handleMarkerMouseDown = (e, marker) => {
-    if (!editMode) return;
-    if (e.ctrlKey || e.shiftKey) return;
-
+    if (!editMode || e.shiftKey) return;
     e.preventDefault();
     e.stopPropagation();
+
+    setWasDragging(false);
 
     const startX = e.clientX;
     const startY = e.clientY;
@@ -321,38 +215,126 @@ function App() {
     const origDisplayY = marker.displayY || marker.y;
     let moved = false;
 
-    const handleMouseMove = (moveEvent) => {
+    const mm = (me) => {
       moved = true;
-      const dx = (moveEvent.clientX - startX) / 8;
-      const dy = (moveEvent.clientY - startY) / 6;
+      const rect = mapRef.current.getBoundingClientRect();
+      const dx = ((me.clientX - startX) / rect.width) * 100;
+      const dy = ((me.clientY - startY) / rect.height) * 100;
 
-      const updated = markers.map(m =>
-        m.id === marker.id
-          ? {
+      setMarkers(prev => prev.map(m => {
+        if (m.id === marker.id) {
+          return {
             ...m,
             x: Math.round((origX + dx) * 100) / 100,
             y: Math.round((origY + dy) * 100) / 100,
             displayX: origDisplayX + dx,
             displayY: origDisplayY + dy,
+          };
+        }
+        return m;
+      }));
+    };
+
+    const mu = () => {
+      document.removeEventListener('mousemove', mm);
+      document.removeEventListener('mouseup', mu);
+      if (!moved) return;
+
+      setWasDragging(true);
+
+      setMarkers(prev => {
+        const movedMarker = prev.find(m => m.id === marker.id);
+        if (!movedMarker) return prev;
+
+        // Ищем ближайшую метку для прилипания
+        const nearby = prev.find(m =>
+          m.mapId === selectedMap &&
+          m.id !== marker.id &&
+          Math.abs(m.x - movedMarker.x) < 1.5 &&
+          Math.abs(m.y - movedMarker.y) < 1.5
+        );
+
+        if (nearby) {
+          // Прилипаем: ставим маркер в ту же точку и пересчитываем группу
+          let updated = prev.map(m => {
+            if (m.id === marker.id) {
+              return { ...m, x: nearby.x, y: nearby.y, displayX: nearby.x, displayY: nearby.y };
+            }
+            return m;
+          });
+
+          // Пересчитываем всю группу
+          updated = recalculateGroup(updated, nearby.x, nearby.y, selectedMap);
+
+          saveToFile(updated);
+          setExpandedGroup(null);
+          return updated;
+        }
+
+        // Если не прилипли — пересчитываем старую группу
+        let updated = recalculateGroup(prev, origX, origY, selectedMap);
+
+        // И пересчитываем новую позицию (если переместился в пустое место)
+        updated = updated.map(m => {
+          if (m.id === marker.id && !updated.some(u => u.id !== m.id && Math.abs(u.x - m.x) < 1.5 && Math.abs(u.y - m.y) < 1.5)) {
+            return { ...m, displayX: m.x, displayY: m.y };
           }
-          : m
-      );
-      setMarkers(updated);
+          return m;
+        });
+
+        saveToFile(updated);
+        setExpandedGroup(null);
+        return updated;
+      });
+    };
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', mu);
+  };
+
+  const handleGroupMouseDown = (e, groupKey) => {
+    if (!editMode) return;
+    e.stopPropagation();
+    const [gx, gy] = groupKey.split(',').map(Number);
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const groupMarkers = markers.filter(m => m.mapId === selectedMap && Math.abs(m.x - gx) < 1.5 && Math.abs(m.y - gy) < 1.5);
+    const origValues = groupMarkers.map(m => ({
+      id: m.id,
+      x: m.x,
+      y: m.y,
+      displayX: m.displayX || m.x,
+      displayY: m.displayY || m.y
+    }));
+
+    const mm = (me) => {
+      const rect = mapRef.current.getBoundingClientRect();
+      const dx = ((me.clientX - startX) / rect.width) * 100;
+      const dy = ((me.clientY - startY) / rect.height) * 100;
+
+      setMarkers(prev => prev.map(m => {
+        const o = origValues.find(ov => ov.id === m.id);
+        return o ? {
+          ...m,
+          x: Math.round((o.x + dx) * 100) / 100,
+          y: Math.round((o.y + dy) * 100) / 100,
+          displayX: o.displayX + dx,
+          displayY: o.displayY + dy
+        } : m;
+      }));
     };
 
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      if (moved) saveToFile(markers);
+    const mu = () => {
+      document.removeEventListener('mousemove', mm);
+      document.removeEventListener('mouseup', mu);
+      saveToFile(markers);
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', mu);
   };
 
   const handleGroupClick = (e, groupKey) => {
     e.stopPropagation();
-
     if (editMode && e.ctrlKey) {
       const [gx, gy] = groupKey.split(',').map(Number);
       setGranadeMenu({ x: gx, y: gy });
@@ -362,161 +344,42 @@ function App() {
       return;
     }
 
+    const [gx, gy] = groupKey.split(',').map(Number);
+
     if (expandedGroup !== groupKey) {
-      const [gx, gy] = groupKey.split(',').map(Number);
-      const updated = markers.map(m => {
-        if (m.mapId === selectedMap && Math.abs(m.x - gx) < 1 && Math.abs(m.y - gy) < 1) {
-          return { ...m };
-        }
-        return m;
-      });
-
-      let count = 0;
-      const rebuilt = updated.map(m => {
-        if (m.mapId === selectedMap && Math.abs(m.x - gx) < 1 && Math.abs(m.y - gy) < 1) {
-          const newMarker = { ...m, displayX: m.x + count * 4, displayY: m.y };
-          count++;
-          return newMarker;
-        }
-        return m;
-      });
-
-      updateMarkers(rebuilt);
+      // Разворачиваем группу
+      const expanded = recalculateGroup(markers, gx, gy, selectedMap);
+      updateMarkers(expanded);
+      setExpandedGroup(groupKey);
+    } else {
+      // Сворачиваем группу
+      collapseGroup(groupKey);
+      setExpandedGroup(null);
     }
-
     setGranadeMenu(null);
     setSidePanel(null);
-    setExpandedGroup(expandedGroup === groupKey ? null : groupKey);
   };
 
-  const handleMarkerHover = (marker) => {
-    if (!editMode && marker.lineTo) {
-      setHoveredMarker(marker);
-    }
+  const handleMarkerHover = (m) => {
+    if (m.lineTo) setHoveredMarker(m);
   };
-
-  const handleMarkerLeave = () => {
-    setHoveredMarker(null);
-  };
+  const handleMarkerLeave = () => setHoveredMarker(null);
 
   const handleBendMouseDown = (e, marker) => {
     if (!editMode) return;
-    e.stopPropagation();
-    e.preventDefault();
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startBendX = marker.bendX || 0;
-    const startBendY = marker.bendY || 0;
-
-    const handleMouseMove = (moveEvent) => {
-      const dx = moveEvent.clientX - startX;
-      const dy = moveEvent.clientY - startY;
-      const newBendX = startBendX + dx;
-      const newBendY = startBendY + dy;
-
-      const updated = markers.map(m =>
-        m.id === marker.id ? { ...m, bendX: newBendX, bendY: newBendY } : m
-      );
-      setMarkers(updated);
-    };
-
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      saveToFile(markers);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    e.stopPropagation(); e.preventDefault();
+    const sx = e.clientX, sy = e.clientY, sbx = marker.bendX || 0, sby = marker.bendY || 0;
+    const mm = (me) => setMarkers(prev => prev.map(m => m.id === marker.id ? { ...m, bendX: sbx + me.clientX - sx, bendY: sby + me.clientY - sy } : m));
+    const mu = () => { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu); saveToFile(markers); };
+    document.addEventListener('mousemove', mm); document.addEventListener('mouseup', mu);
   };
 
-  const handleThrowTypeChange = (value) => {
-    if (!sidePanel) return;
-    const updated = markers.map(m =>
-      m.id === sidePanel.marker.id ? { ...m, throwType: value } : m
-    );
-    updateMarkers(updated);
-    setSidePanel({ ...sidePanel, marker: { ...sidePanel.marker, throwType: value } });
-  };
-
-  const handleSideChange = (value) => {
-    if (!sidePanel) return;
-    const updated = markers.map(m =>
-      m.id === sidePanel.marker.id ? { ...m, side: value } : m
-    );
-    updateMarkers(updated);
-    setSidePanel({ ...sidePanel, marker: { ...sidePanel.marker, side: value } });
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setDragOver(true);
-  };
-
-  const handleDragLeave = () => {
-    setDragOver(false);
-  };
-
-  const handleDrop = async (e) => {
-    e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('video/')) {
-      await uploadVideo(file);
-    }
-  };
-
-  const handleFileSelect = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      await uploadVideo(file);
-    }
-  };
-
-  const uploadVideo = async (file) => {
-    if (!sidePanel) return;
-    setUploading(true);
-    const formData = new FormData();
-    formData.append('video', file);
-    try {
-      const res = await fetch('http://localhost:3001/api/upload-video', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.url) {
-        const updated = markers.map(m =>
-          m.id === sidePanel.marker.id ? { ...m, videoUrl: data.url } : m
-        );
-        updateMarkers(updated);
-        setSidePanel({ ...sidePanel, marker: { ...sidePanel.marker, videoUrl: data.url } });
-      }
-    } catch (err) {
-      console.error('Ошибка загрузки:', err);
-    }
-    setUploading(false);
-  };
-
-  const handleDeleteLine = () => {
-    if (!sidePanel) return;
-    const updated = markers.map(m =>
-      m.id === sidePanel.marker.id ? { ...m, lineTo: null, bendX: 0, bendY: 0 } : m
-    );
-    updateMarkers(updated);
-    setSidePanel({ ...sidePanel, marker: { ...sidePanel.marker, lineTo: null, bendX: 0, bendY: 0 } });
-  };
-
-  const handleDeleteVideo = () => {
-    if (!sidePanel) return;
-    const updated = markers.map(m =>
-      m.id === sidePanel.marker.id ? { ...m, videoUrl: '' } : m
-    );
-    updateMarkers(updated);
-    setSidePanel({ ...sidePanel, marker: { ...sidePanel.marker, videoUrl: '' } });
-  };
+  const handleThrowTypeChange = (v) => { if (!sidePanel) return; updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, throwType: v } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, throwType: v } })); };
+  const handleSideChange = (v) => { if (!sidePanel) return; updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, side: v } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, side: v } })); };
+  const handleDeleteLine = () => { if (!sidePanel) return; updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, lineTo: null, bendX: 0, bendY: 0 } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, lineTo: null } })); };
+  const handleDeleteVideo = () => { if (!sidePanel) return; updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, videoUrl: '' } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, videoUrl: '' } })); };
 
   const currentMarkers = markers.filter(m => m.mapId === selectedMap);
-
   const groupedMarkers = {};
   currentMarkers.forEach(m => {
     const key = `${m.x.toFixed(1)},${m.y.toFixed(1)}`;
@@ -525,38 +388,27 @@ function App() {
   });
 
   return (
-    <div className="app" onClick={() => { setGranadeMenu(null); setSidePanel(null); setDrawingLine(null); setExpandedGroup(null); }}>
+    <div className="app" onClick={() => {
+      if (expandedGroup) {
+        collapseGroup(expandedGroup);
+        setExpandedGroup(null);
+      }
+      setGranadeMenu(null); setSidePanel(null); setDrawingLine(null); setExpandedGroup(null);
+    }}>
       <header className="header">
         <div className="header-spacer"></div>
-
         <div className="dropdown-container">
-          <button className="dropdown-button" onClick={() => setDropdownOpen(!dropdownOpen)}>
-            Карты ▾
-          </button>
+          <button className="dropdown-button" onClick={() => setDropdownOpen(!dropdownOpen)}>Карты ▾</button>
           {dropdownOpen && (
-            <ul className="dropdown">
-              {maps.map(map => (
-                <li key={map.id} className="dropdown-item" onClick={() => {
-                  setSelectedMap(map.id);
-                  setDropdownOpen(false);
-                  setGranadeMenu(null);
-                  setSidePanel(null);
-                  setDrawingLine(null);
-                  setExpandedGroup(null);
-                }}>
-                  {map.name}
-                </li>
-              ))}
-            </ul>
+            <ul className="dropdown">{maps.map(map => (
+              <li key={map.id} className="dropdown-item" onClick={() => { setSelectedMap(map.id); setDropdownOpen(false); setGranadeMenu(null); setSidePanel(null); setDrawingLine(null); setExpandedGroup(null); }}>{map.name}</li>
+            ))}</ul>
           )}
         </div>
-
         <div className="header-right">
           {editMode && (
             <div className="guide-container">
-              <button className="guide-icon-btn" title="Управление">
-                <img src="/icons/help.png" alt="?" className="guide-icon-img" />
-              </button>
+              <button className="guide-icon-btn" title="Управление"><img src="/icons/help.png" alt="?" className="guide-icon-img" /></button>
               <div className="guide-dropdown">
                 <div className="guide-title">Управление</div>
                 <div className="guide-item"><kbd>ЛКМ</kbd> по карте - создать</div>
@@ -566,17 +418,14 @@ function App() {
                 <div className="guide-item"><kbd>Shift</kbd> + <kbd>ЛКМ</kbd> по карте - конец</div>
                 <div className="guide-item"><kbd>ПКМ</kbd> - удалить</div>
                 <div className="guide-item"><kbd>ЛКМ</kbd> по группе - развернуть</div>
+                <div className="guide-item">Перетащить метку на другую - в группу</div>
               </div>
             </div>
           )}
           {editMode ? (
-            <button className="edit-icon-btn active" onClick={handleLogout} title="Выйти из редактора">
-              <img src="/icons/edit-active.png" alt="Редактор" className="edit-icon-img" />
-            </button>
+            <button className="edit-icon-btn active" onClick={handleLogout} title="Выйти из редактора"><img src="/icons/edit-active.png" alt="Редактор" className="edit-icon-img" /></button>
           ) : (
-            <button className="edit-icon-btn" onClick={() => setShowLogin(true)} title="Редактор">
-              <img src="/icons/edit.png" alt="Редактор" className="edit-icon-img" />
-            </button>
+            <button className="edit-icon-btn" onClick={() => setShowLogin(true)} title="Редактор"><img src="/icons/edit.png" alt="Редактор" className="edit-icon-img" /></button>
           )}
         </div>
       </header>
@@ -586,9 +435,7 @@ function App() {
           <div className="login-modal" onClick={e => e.stopPropagation()}>
             <button className="login-close" onClick={() => { setShowLogin(false); setLoginError(false); setPassword(''); }}>✕</button>
             <h2 className="login-title">Вход в редактор</h2>
-            <input type="password" className="login-input" placeholder="Введите пароль" value={password}
-              onChange={(e) => { setPassword(e.target.value); setLoginError(false); }}
-              onKeyDown={handleKeyDown} autoFocus />
+            <input type="password" className="login-input" placeholder="Введите пароль" value={password} onChange={(e) => { setPassword(e.target.value); setLoginError(false); }} onKeyDown={handleKeyDown} autoFocus />
             {loginError && <p className="login-error">Неверный пароль</p>}
             <button className="login-btn" onClick={handleLogin}>Войти</button>
           </div>
@@ -596,9 +443,7 @@ function App() {
       )}
 
       <main className="main">
-        {loading ? (
-          <p style={{ color: '#a0aec0' }}>Загрузка...</p>
-        ) : (
+        {loading ? <p style={{ color: '#a0aec0' }}>Загрузка...</p> : (
           <div className="map-wrapper">
             <div className="map-container" onClick={handleMapClick} ref={mapRef}>
               <img src={`/maps/${imageName}`} alt={selectedMap || 'Выберите карту'} className="map-image" />
@@ -606,116 +451,88 @@ function App() {
               <svg className="lines-svg" viewBox="0 0 800 600" preserveAspectRatio="none">
                 {currentMarkers.map(marker => {
                   if (!marker.lineTo) return null;
-
                   if (drawingLine && marker.id !== drawingLine.markerId) return null;
-
                   const isHovered = hoveredMarker?.id === marker.id;
                   const isDrawing = drawingLine?.markerId === marker.id;
-                  if (!isHovered && !isDrawing && !editMode) return null;
 
-                  const startX = marker.lineTo.x * 8;
-                  const startY = marker.lineTo.y * 6;
-                  const endX = marker.x * 8;
-                  const endY = marker.y * 6;
-                  const midX = (startX + endX) / 2 + (marker.bendX || 0);
-                  const midY = (startY + endY) / 2 + (marker.bendY || 0);
+                  // Если наведён курсор на какую-то гранату — показываем только её траекторию
+                  if (editMode && hoveredMarker && !isHovered && !isDrawing) return null;
+
+                  // В режиме просмотра: показываем только при наведении
+                  if (!editMode && !isHovered && !isDrawing) return null;
+
+                  const group = Object.values(groupedMarkers).find(g => g.some(m => m.id === marker.id));
+                  let ex = (marker.displayX || marker.x) * 8;
+                  let ey = (marker.displayY || marker.y) * 6;
+
+                  if (group && group.length >= 2 && marker.id !== group[0].id) {
+                    ex = (group[0].displayX || group[0].x) * 8;
+                    ey = (group[0].displayY || group[0].y) * 6;
+                  }
+
+                  const sx = marker.lineTo.x * 8;
+                  const sy = marker.lineTo.y * 6;
+                  const mx = (sx + ex) / 2 + (marker.bendX || 0);
+                  const my = (sy + ey) / 2 + (marker.bendY || 0);
 
                   return (
                     <g key={`line-${marker.id}`}>
-                      <line x1={startX} y1={startY} x2={midX} y2={midY} stroke="white" strokeWidth="2" strokeDasharray="6,3" style={{ pointerEvents: 'none' }} />
-                      <line x1={midX} y1={midY} x2={endX} y2={endY} stroke="white" strokeWidth="2" strokeDasharray="6,3" style={{ pointerEvents: 'none' }} />
-                      <circle cx={startX} cy={startY} r="5" fill="white" opacity="0.9" style={{ pointerEvents: 'none' }} />
-                      {editMode && (
-                        <circle cx={midX} cy={midY} r="4" fill="white" stroke="#1a1a2e" strokeWidth="2"
-                          style={{ cursor: 'move', pointerEvents: 'auto' }}
-                          onMouseDown={(e) => handleBendMouseDown(e, marker)} />
-                      )}
+                      <line x1={sx} y1={sy} x2={mx} y2={my} stroke="white" strokeWidth="2" strokeDasharray="6,3" style={{ pointerEvents: 'none' }} />
+                      <line x1={mx} y1={my} x2={ex} y2={ey} stroke="white" strokeWidth="2" strokeDasharray="6,3" style={{ pointerEvents: 'none' }} />
+                      <circle cx={sx} cy={sy} r="5" fill="white" opacity="0.9" style={{ pointerEvents: 'none' }} />
+                      {editMode && <circle cx={mx} cy={my} r="4" fill="white" stroke="#1a1a2e" strokeWidth="2" style={{ cursor: 'move', pointerEvents: 'auto' }} onMouseDown={(e) => handleBendMouseDown(e, marker)} />}
                     </g>
                   );
                 })}
               </svg>
 
-              {drawingLine && (
-                <div className="drawing-hint">Shift+клик по карте - поставить конечную точку</div>
-              )}
-
+              {drawingLine && <div className="drawing-hint">Shift+клик по карте - поставить конечную точку</div>}
               {granadeMenu && selectedMap && (
                 <div className="granade-menu" style={{ left: `${granadeMenu.x}%`, top: `${granadeMenu.y}%` }} onClick={e => e.stopPropagation()}>
                   {granadeTypes.map((g, i) => (
-                    <button key={g.type} className={`granade-option granade-pos-${i}`} onClick={(e) => handleSelectGranade(g.type, e)}>
-                      <img src={g.icon} alt={g.type} className="granade-option-img" />
-                    </button>
+                    <button key={g.type} className={`granade-option granade-pos-${i}`} onClick={(e) => handleSelectGranade(g.type, e)}><img src={g.icon} alt={g.type} className="granade-option-img" /></button>
                   ))}
                 </div>
               )}
 
               {Object.entries(groupedMarkers).map(([key, group]) => {
-                if (drawingLine && !group.find(m => m.id === drawingLine.markerId)) {
-                  return null;
-                }
-
+                if (drawingLine && !group.find(m => m.id === drawingLine.markerId)) return null;
                 const isExpanded = expandedGroup === key;
                 const [gx, gy] = key.split(',').map(Number);
-
                 if (group.length === 1 && !isExpanded) {
-                  const marker = group[0];
-                  const type = granadeTypes.find(g => g.type === marker.type);
-                  const dx = (marker.displayX || marker.x) - marker.x;
-                  const dy = (marker.displayY || marker.y) - marker.y;
+                  const marker = group[0], type = granadeTypes.find(g => g.type === marker.type);
+                  const left = `${(marker.displayX || marker.x)}%`;
+                  const top = `${(marker.displayY || marker.y)}%`;
                   return (
-                    <div key={marker.id}
-                      className={`marker ${drawingLine?.markerId === marker.id ? 'drawing' : ''}`}
-                      style={{ left: `${marker.x + dx}%`, top: `${marker.y + dy}%` }}
-                      onMouseDown={(e) => handleMarkerMouseDown(e, marker)}
-                      onClick={(e) => handleMarkerClick(e, marker)}
-                      onContextMenu={(e) => handleMarkerRightClick(e, marker.id)}
-                      onMouseEnter={() => handleMarkerHover(marker)}
-                      onMouseLeave={handleMarkerLeave}
-                      title={type?.type}>
+                    <div key={marker.id} className={`marker ${drawingLine?.markerId === marker.id ? 'drawing' : ''}`} style={{ left, top }}
+                      onMouseDown={(e) => handleMarkerMouseDown(e, marker)} onClick={(e) => handleMarkerClick(e, marker)}
+                      onContextMenu={(e) => handleMarkerRightClick(e, marker.id)} onMouseEnter={() => handleMarkerHover(marker)} onMouseLeave={handleMarkerLeave} title={type?.type}>
                       <img src={type?.icon} alt={type?.type} className="marker-icon-img" />
                     </div>
                   );
                 }
-
                 return (
                   <div key={key}>
                     {isExpanded ? (
                       <>
-                        {group.map((marker, i) => {
+                        {group.map((marker) => {
                           const type = granadeTypes.find(g => g.type === marker.type);
-                          const dx = (marker.displayX || marker.x) - marker.x;
-                          const dy = (marker.displayY || marker.y) - marker.y;
+                          const left = `${(marker.displayX || marker.x)}%`;
+                          const top = `${(marker.displayY || marker.y)}%`;
                           return (
-                            <div key={marker.id}
-                              className={`marker ${drawingLine?.markerId === marker.id ? 'drawing' : ''}`}
-                              style={{ left: `${marker.x + dx}%`, top: `${marker.y + dy}%` }}
-                              onMouseDown={(e) => handleMarkerMouseDown(e, marker)}
-                              onClick={(e) => handleMarkerClick(e, marker)}
-                              onContextMenu={(e) => handleMarkerRightClick(e, marker.id)}
-                              onMouseEnter={() => handleMarkerHover(marker)}
-                              onMouseLeave={handleMarkerLeave}
-                              title={type?.type}>
+                            <div key={marker.id} className={`marker ${drawingLine?.markerId === marker.id ? 'drawing' : ''}`} style={{ left, top }}
+                              onMouseDown={(e) => handleMarkerMouseDown(e, marker)} onClick={(e) => handleMarkerClick(e, marker)}
+                              onContextMenu={(e) => handleMarkerRightClick(e, marker.id)} onMouseEnter={() => handleMarkerHover(marker)} onMouseLeave={handleMarkerLeave} title={type?.type}>
                               <img src={type?.icon} alt={type?.type} className="marker-icon-img" />
                             </div>
                           );
                         })}
-                        <div
-                          className="marker group-close-marker"
-                          style={{ left: `${gx + group.length * 4}%`, top: `${gy}%` }}
-                          onClick={(e) => { e.stopPropagation(); setExpandedGroup(null); }}
-                          title="Свернуть">
-                          <span className="close-icon">✕</span>
-                        </div>
+                        <div className="marker group-close-marker" style={{ left: `${gx + group.length * 4}%`, top: `${gy}%` }}
+                          onClick={(e) => { e.stopPropagation(); collapseGroup(key); setExpandedGroup(null); }} title="Свернуть"><span className="close-icon">✕</span></div>
                       </>
                     ) : (
-                      <div
-                        className="marker group-marker"
-                        style={{ left: `${gx}%`, top: `${gy}%`, cursor: editMode ? 'move' : 'pointer' }}
-                        onClick={(e) => handleGroupClick(e, key)}
-                        onMouseDown={(e) => handleGroupMouseDown(e, key)}
-                        title={`${group.length} гранат`}>
-                        <span className="group-count">{group.length}</span>
-                      </div>
+                      <div className="marker group-marker" style={{ left: `${gx}%`, top: `${gy}%`, cursor: editMode ? 'move' : 'pointer' }}
+                        onClick={(e) => handleGroupClick(e, key)} onMouseDown={(e) => handleGroupMouseDown(e, key)} title={`${group.length} гранат`}><span className="group-count">{group.length}</span></div>
                     )}
                   </div>
                 );
@@ -729,81 +546,33 @@ function App() {
                   <img src={granadeTypes.find(g => g.type === sidePanel.marker.type)?.icon} alt="" className="side-panel-type-icon" />
                   <span>{granadeTypes.find(g => g.type === sidePanel.marker.type)?.type}</span>
                 </div>
-
                 {sidePanel.mode === 'edit' ? (
                   <>
                     <div className="edit-video-block">
-                      {sidePanel.marker.lineTo && (
-                        <button className="delete-line-btn" onClick={handleDeleteLine}>Удалить траекторию</button>
-                      )}
-                      {sidePanel.marker.videoUrl && (
-                        <button className="delete-line-btn" onClick={handleDeleteVideo}>Удалить видео</button>
-                      )}
+                      {sidePanel.marker.lineTo && <button className="delete-line-btn" onClick={handleDeleteLine}>Удалить траекторию</button>}
+                      {sidePanel.marker.videoUrl && <button className="delete-line-btn" onClick={handleDeleteVideo}>Удалить видео</button>}
                     </div>
                     {sidePanel.marker.videoUrl ? (
-                      <div className="video-loaded-block">
-                        <video src={sidePanel.marker.videoUrl} controls className="side-video" />
-                      </div>
+                      <div className="video-loaded-block"><video src={sidePanel.marker.videoUrl} controls className="side-video" /></div>
                     ) : (
-                      <div className={`drop-zone ${dragOver ? 'drag-over' : ''}`}
-                        onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
-                        onClick={() => fileInputRef.current?.click()}>
-                        <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="video/*" style={{ display: 'none' }} />
-                        {uploading ? (
-                          <p className="drop-zone-text">Загрузка...</p>
-                        ) : (
-                          <p className="drop-zone-text">Перетащите видео сюда{'\n'}или нажмите чтобы выбрать</p>
-                        )}
-                      </div>
+                      <div className="video-url-block"><input type="text" className="video-url-input" placeholder="Ссылка на видео (YouTube / Cloudinary)" value={sidePanel.marker.videoUrl || ''} onChange={(e) => { updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, videoUrl: e.target.value } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, videoUrl: e.target.value } })); }} /></div>
                     )}
                     <div className="throw-type-block">
                       <p className="throw-type-label">Тип броска:</p>
-                      <select className="throw-type-select" value={sidePanel.marker.throwType || ''}
-                        onChange={(e) => handleThrowTypeChange(e.target.value)}>
-                        {throwTypes.map(t => (
-                          <option key={t.value} value={t.value}>{t.label}</option>
-                        ))}
-                      </select>
+                      <select className="throw-type-select" value={sidePanel.marker.throwType || ''} onChange={(e) => handleThrowTypeChange(e.target.value)}>{throwTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
                     </div>
                     <div className="throw-type-block">
                       <p className="throw-type-label">Сторона:</p>
-                      <div className="side-buttons">
-                        {sideTypes.filter(s => s.value !== '').map(s => (
-                          <button
-                            key={s.value}
-                            className={`side-btn ${sidePanel.marker.side === s.value ? 'active' : ''}`}
-                            onClick={() => handleSideChange(sidePanel.marker.side === s.value ? '' : s.value)}
-                          >
-                            <img src={s.icon} alt={s.label} className="side-btn-icon" />
-                          </button>
-                        ))}
-                      </div>
+                      <div className="side-buttons">{sideTypes.filter(s => s.value !== '').map(s => (
+                        <button key={s.value} className={`side-btn ${sidePanel.marker.side === s.value ? 'active' : ''}`} onClick={() => handleSideChange(sidePanel.marker.side === s.value ? '' : s.value)}><img src={s.icon} alt={s.label} className="side-btn-icon" /></button>
+                      ))}</div>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="video-container">
-                      {sidePanel.marker.videoUrl ? (
-                        <video src={sidePanel.marker.videoUrl} controls className="side-video" />
-                      ) : (
-                        <p className="no-video">Видео не добавлено</p>
-                      )}
-                    </div>
-                    {sidePanel.marker.throwType && (
-                      <div className="throw-type-display">
-                        Тип: {throwTypes.find(t => t.value === sidePanel.marker.throwType)?.label}
-                      </div>
-                    )}
-                    {sidePanel.marker.side && (
-                      <div className="side-display">
-                        <span className="side-display-label">Сторона:</span>
-                        <img
-                          src={sideTypes.find(s => s.value === sidePanel.marker.side)?.icon}
-                          alt=""
-                          className="side-display-icon"
-                        />
-                      </div>
-                    )}
+                    <div className="video-container">{sidePanel.marker.videoUrl ? <video src={sidePanel.marker.videoUrl} controls className="side-video" /> : <p className="no-video">Видео не добавлено</p>}</div>
+                    {sidePanel.marker.throwType && <div className="throw-type-display">Тип: {throwTypes.find(t => t.value === sidePanel.marker.throwType)?.label}</div>}
+                    {sidePanel.marker.side && <div className="side-display"><span className="side-display-label">Сторона:</span><img src={sideTypes.find(s => s.value === sidePanel.marker.side)?.icon} alt="" className="side-display-icon" /></div>}
                   </>
                 )}
               </div>
