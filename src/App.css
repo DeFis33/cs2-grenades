@@ -13,7 +13,7 @@ body {
   font-family: Arial, sans-serif;
   background-color: #0f0f1a;
   min-height: 100vh;
-  min-height: -webkit-fill-available; /* Для iOS Safari */
+  min-height: -webkit-fill-available;
 }
 
 #root {
@@ -252,7 +252,7 @@ body {
   left: -72px;
 }
 
-/* Боковая панель (абсолютно, не двигает карту) */
+/* Боковая панель (десктоп) */
 .side-panel {
   position: absolute;
   left: calc(100% + 20px);
@@ -825,35 +825,36 @@ kbd {
     max-width: 100%;
   }
 
-  .map-image {
-    border-radius: 0;
-  }
-
-  .side-panel {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    top: auto;
-    width: 100%;
-    max-height: 50vh;
-    border-radius: 16px 16px 0 0;
-    padding: 20px 16px;
-    z-index: 1000;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-  }
-
   .main {
+    padding: 10px;
     align-items: flex-start;
   }
 
   .map-wrapper {
     width: 100%;
+    flex-direction: column;
+    align-items: center;
   }
 
   .map-image {
-    max-height: calc(100vh - 56px);
+    border-radius: 8px;
+    max-height: calc(100vh - 76px);
     object-fit: contain;
+  }
+
+  .side-panel {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    border-radius: 12px;
+    margin-top: 10px;
+    padding: 20px 16px;
+    box-shadow: none;
   }
 }
 
@@ -894,11 +895,14 @@ kbd {
   }
 
   .main {
+    padding: 8px;
     align-items: flex-start;
   }
 
   .map-wrapper {
     width: 100%;
+    flex-direction: column;
+    align-items: center;
   }
 
   .map-container {
@@ -907,9 +911,24 @@ kbd {
   }
 
   .map-image {
-    border-radius: 0;
-    max-height: calc(100vh - 52px);
+    border-radius: 8px;
+    max-height: calc(100vh - 68px);
     object-fit: contain;
+  }
+
+  .side-panel {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    border-radius: 12px;
+    margin-top: 10px;
+    padding: 16px 12px;
+    box-shadow: none;
   }
 
   .marker {
@@ -943,12 +962,6 @@ kbd {
   .granade-pos-1 { top: -18px; left: 26px; }
   .granade-pos-2 { top: 8px; left: -18px; }
   .granade-pos-3 { top: -18px; left: -62px; }
-
-  /* Боковая панель */
-  .side-panel {
-    max-height: 60vh;
-    padding: 16px 12px;
-  }
 
   .side-panel-type {
     font-size: 14px;
@@ -986,7 +999,7 @@ kbd {
 
   .login-input {
     padding: 10px 14px;
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .login-btn {
@@ -1049,8 +1062,12 @@ kbd {
     height: 18px;
   }
 
+  .main {
+    padding: 6px;
+  }
+
   .map-image {
-    max-height: calc(100vh - 44px);
+    max-height: calc(100vh - 56px);
   }
 
   .marker {
@@ -1079,8 +1096,7 @@ kbd {
   .granade-pos-3 { top: -16px; left: -54px; }
 
   .side-panel {
-    max-height: 55vh;
-    border-radius: 12px 12px 0 0;
+    padding: 14px 10px;
   }
 }
 
