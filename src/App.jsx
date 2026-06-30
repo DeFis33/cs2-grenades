@@ -3,7 +3,7 @@ import './App.css';
 
 const CLOUDINARY_CLOUD_NAME = 'dq1giky8f';
 const CLOUDINARY_UPLOAD_PRESET = 'markers_upload';
-const MARKERS_URL = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/raw/upload/markers_srk0ae.json`;
+const MARKERS_URL = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/raw/upload/markers_srk0ae.json?t=${Date.now()}`;
 
 const maps = [
   { id: 'dust2', name: 'Dust 2' },
@@ -54,7 +54,7 @@ function App() {
   const imageName = selectedMap ? `${selectedMap}.png` : 'start.png';
 
   useEffect(() => {
-    fetch(MARKERS_URL)
+    fetch(`${MARKERS_URL}?t=${Date.now()}`)
       .then(res => res.ok ? res.json() : [])
       .then(data => {
         const fixed = data.map(m => ({
