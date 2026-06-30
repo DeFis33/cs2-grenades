@@ -4,12 +4,29 @@
   box-sizing: border-box;
 }
 
+html {
+  background-color: #0f0f1a;
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   font-family: Arial, sans-serif;
+  background-color: #0f0f1a;
+  min-height: 100vh;
+  min-height: -webkit-fill-available; /* Для iOS Safari */
+  overflow: hidden;
+}
+
+#root {
+  background-color: #0f0f1a;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
 }
 
 .app {
   min-height: 100vh;
+  min-height: -webkit-fill-available;
   display: flex;
   flex-direction: column;
   background-color: #0f0f1a;
