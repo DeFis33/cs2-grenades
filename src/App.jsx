@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 
-const CLOUDINARY_CLOUD_NAME = 'dq1giky8f';
-const CLOUDINARY_UPLOAD_PRESET = 'markers_upload';
-const MARKERS_URL = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/raw/upload/markers_srk0ae.json?t=${Date.now()}`;
+const GIST_ID = '6d5d7b6e6ceb19ef25107e465c926d69';
+const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN;
+const MARKERS_URL = `https://api.github.com/gists/${GIST_ID}`;
 
 const maps = [
   { id: 'dust2', name: 'Dust 2' },
@@ -54,25 +54,28 @@ function App() {
   const imageName = selectedMap ? `${selectedMap}.png` : 'start.png';
 
   useEffect(() => {
-    fetch(`${MARKERS_URL}?t=${Date.now()}`)
-      .then(res => res.ok ? res.json() : [])
-      .then(data => {
-        const fixed = data.map(m => ({
-          ...m,
-          displayX: m.displayX ?? m.x,
-          displayY: m.displayY ?? m.y,
-          lineTo: m.lineTo || null,
-          bendX: m.bendX || 0,
-          bendY: m.bendY || 0,
-          throwType: m.throwType || '',
-          videoUrl: m.videoUrl || '',
-          side: m.side || '',
-        }));
-        setMarkers(fixed);
-      })
-      .catch(() => setMarkers([]))
-      .finally(() => setLoading(false));
-  }, []);
+      fetch(MARKERS_URL)
+        .then(res => res.json())
+        .then(data => {
+          const content = data.files['markers.json']?.content;
+          if (!content) return [];
+          const parsed = JSON.parse(content);
+          const fixed = parsed.map(m => ({
+            ...m,
+            displayX: m.displayX ?? m.x,
+            displayY: m.displayY ?? m.y,
+            lineTo: m.lineTo || null,
+            bendX: m.bendX || 0,
+            bendY: m.bendY || 0,
+            throwType: m.throwType || '',
+            videoUrl: m.videoUrl || '',
+            side: m.side || '',
+          }));
+          setMarkers(fixed);
+        })
+        .catch(() => setMarkers([]))
+        .finally(() => setLoading(false));
+    }, []);
 
   useEffect(() => {
     const handleClick = () => setGuideOpen(false);
@@ -81,15 +84,20 @@ function App() {
   }, []);
 
   const saveToFile = useCallback(async (data) => {
-      const formData = new FormData();
-      formData.append('file', new Blob([JSON.stringify(data)], { type: 'application/json' }), 'markers.json');
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-      formData.append('public_id', 'markers_srk0ae');
-      
       try {
-        await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/raw/upload`, {
-          method: 'POST',
-          body: formData
+        await fetch(MARKERS_URL, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `token ${GITHUB_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            files: {
+              'markers.json': {
+                content: JSON.stringify(data, null, 2)
+              }
+            }
+          })
         });
       } catch (err) {
         console.error('Ошибка сохранения:', err);
