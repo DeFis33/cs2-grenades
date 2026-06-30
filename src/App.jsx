@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 
+const CLOUDINARY_CLOUD_NAME = 'dq1giky8f';
+const CLOUDINARY_UPLOAD_PRESET = 'markers_upload';
+const MARKERS_URL = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/raw/upload/markers_srk0ae.json`;
+
 const maps = [
   { id: 'dust2', name: 'Dust 2' },
 ];
@@ -50,7 +54,7 @@ function App() {
   const imageName = selectedMap ? `${selectedMap}.png` : 'start.png';
 
   useEffect(() => {
-    fetch('/markers.json')
+    fetch(MARKERS_URL)
       .then(res => res.ok ? res.json() : [])
       .then(data => {
         const fixed = data.map(m => ({
@@ -77,8 +81,20 @@ function App() {
   }, []);
 
   const saveToFile = useCallback(async (data) => {
-    try { await fetch('http://localhost:3001/api/save-markers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); } catch (err) { }
-  }, []);
+      const formData = new FormData();
+      formData.append('file', new Blob([JSON.stringify(data)], { type: 'application/json' }), 'markers.json');
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      formData.append('public_id', 'markers_srk0ae');
+      
+      try {
+        await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/raw/upload`, {
+          method: 'POST',
+          body: formData
+        });
+      } catch (err) {
+        console.error('Ошибка сохранения:', err);
+      }
+    }, []);
 
   const updateMarkers = (newMarkers) => { setMarkers(newMarkers); saveToFile(newMarkers); };
 
