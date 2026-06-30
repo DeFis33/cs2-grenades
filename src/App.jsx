@@ -44,6 +44,7 @@ function App() {
   const [drawingLine, setDrawingLine] = useState(null);
   const [hoveredMarker, setHoveredMarker] = useState(null);
   const [expandedGroup, setExpandedGroup] = useState(null);
+  const [guideOpen, setGuideOpen] = useState(false);
   const mapRef = useRef(null);
 
   const imageName = selectedMap ? `${selectedMap}.png` : 'start.png';
@@ -67,6 +68,12 @@ function App() {
       })
       .catch(() => setMarkers([]))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const handleClick = () => setGuideOpen(false);
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
   }, []);
 
   const saveToFile = useCallback(async (data) => {
@@ -407,9 +414,18 @@ function App() {
         </div>
         <div className="header-right">
           {editMode && (
-            <div className="guide-container">
-              <button className="guide-icon-btn" title="Управление"><img src="/icons/help.png" alt="?" className="guide-icon-img" /></button>
-              <div className="guide-dropdown">
+            <div className={`guide-container ${guideOpen ? 'active' : ''}`}>
+              <button
+                className="guide-icon-btn"
+                title="Управление"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setGuideOpen(!guideOpen);
+                }}
+              >
+                <img src="/icons/help.png" alt="?" className="guide-icon-img" />
+              </button>
+              <div className="guide-dropdown" onClick={(e) => e.stopPropagation()}>
                 <div className="guide-title">Управление</div>
                 <div className="guide-item"><kbd>ЛКМ</kbd> по карте - создать</div>
                 <div className="guide-item"><kbd>ЛКМ</kbd> по метке - редактировать</div>

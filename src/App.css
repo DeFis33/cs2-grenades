@@ -800,3 +800,267 @@ kbd {
 .video-url-input:focus {
   border-color: #e94560;
 }
+
+/* ============ МОБИЛЬНАЯ АДАПТАЦИЯ ============ */
+
+/* Планшеты */
+@media (max-width: 1024px) {
+  .map-container {
+    width: 100%;
+    max-width: 800px;
+  }
+
+  .side-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: 100%;
+    max-height: 50vh;
+    border-radius: 16px 16px 0 0;
+    padding: 20px 16px;
+    z-index: 1000;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .main {
+    padding: 10px;
+  }
+}
+
+/* Телефоны */
+@media (max-width: 768px) {
+  .header {
+    padding: 8px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .header-spacer {
+    display: none;
+  }
+
+  .dropdown-container {
+    position: static;
+    transform: none;
+    flex: 1;
+  }
+
+  .dropdown-button {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .dropdown {
+    left: 0;
+    right: 0;
+    transform: none;
+    min-width: unset;
+    width: 100%;
+  }
+
+  .header-right {
+    gap: 6px;
+  }
+
+  .map-container {
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  .map-image {
+    border-radius: 8px;
+  }
+
+  .marker {
+    width: 24px;
+    height: 24px;
+  }
+
+  .marker-icon-img {
+    width: 16px;
+    height: 16px;
+  }
+
+  .group-marker {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+  }
+
+  /* Меню гранат - адаптивное позиционирование */
+  .granade-option {
+    width: 36px;
+    height: 36px;
+  }
+
+  .granade-option-img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .granade-pos-0 { top: -44px; left: -18px; }
+  .granade-pos-1 { top: -18px; left: 26px; }
+  .granade-pos-2 { top: 8px; left: -18px; }
+  .granade-pos-3 { top: -18px; left: -62px; }
+
+  /* Боковая панель */
+  .side-panel {
+    max-height: 60vh;
+    padding: 16px 12px;
+  }
+
+  .side-panel-type {
+    font-size: 14px;
+  }
+
+  .side-panel-type-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .video-url-input {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .throw-type-select {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .side-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  /* Модальное окно */
+  .login-modal {
+    width: 95%;
+    padding: 20px;
+  }
+
+  .login-title {
+    font-size: 18px;
+  }
+
+  .login-input {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .login-btn {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  /* Подсказка рисования */
+  .drawing-hint {
+    font-size: 11px;
+    padding: 4px 12px;
+    top: 6px;
+  }
+
+  /* Гайд */
+  .guide-dropdown {
+    width: 220px;
+    font-size: 11px;
+    right: -10px;
+  }
+
+  .guide-item {
+    font-size: 11px;
+  }
+
+  kbd {
+    font-size: 10px;
+    padding: 1px 4px;
+  }
+}
+
+/* Маленькие телефоны */
+@media (max-width: 480px) {
+  .header {
+    padding: 6px 8px;
+  }
+
+  .dropdown-button {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  .edit-icon-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .edit-icon-img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .guide-icon-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .guide-icon-img {
+    width: 18px;
+    height: 18px;
+  }
+
+  .marker {
+    width: 22px;
+    height: 22px;
+  }
+
+  .marker-icon-img {
+    width: 14px;
+    height: 14px;
+  }
+
+  .granade-option {
+    width: 32px;
+    height: 32px;
+  }
+
+  .granade-option-img {
+    width: 18px;
+    height: 18px;
+  }
+
+  .granade-pos-0 { top: -38px; left: -16px; }
+  .granade-pos-1 { top: -16px; left: 22px; }
+  .granade-pos-2 { top: 6px; left: -16px; }
+  .granade-pos-3 { top: -16px; left: -54px; }
+
+  .side-panel {
+    max-height: 55vh;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .main {
+    padding: 6px;
+  }
+}
+
+/* Touch-устройства */
+@media (hover: none) and (pointer: coarse) {
+  .marker:hover {
+    transform: translate(-50%, -50%) scale(1); /* Убираем hover-эффекты на тачскринах */
+  }
+
+  .granade-option:hover {
+    transform: none;
+  }
+
+  .guide-container:hover .guide-dropdown {
+    display: none; /* Отключаем hover на тачскринах */
+  }
+
+  .guide-container.active .guide-dropdown {
+    display: block; /* Только по клику */
+  }
+}
