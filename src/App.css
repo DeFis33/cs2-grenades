@@ -490,11 +490,12 @@ body {
   width: 100%; height: 100%;
   background-color: rgba(0,0,0,0.85);
   display: flex;
-  align-items: center; /* Центр по вертикали */
-  justify-content: center; /* Центр по горизонтали */
+  align-items: center;
+  justify-content: center;
   z-index: 1000;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  padding: 40px; /* Отступы чтобы картинка не прилипала к краям */
 }
 
 /* SVG линии */
@@ -954,7 +955,8 @@ kbd {
 
 /* Полноэкранный просмотр */
 .fullscreen-image {
-  max-width: 90%;
+  display: block;
+  max-width: 90vw;
   max-height: 90vh;
   width: auto;
   height: auto;
