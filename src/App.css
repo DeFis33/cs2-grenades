@@ -292,6 +292,12 @@ body {
   overflow: hidden;
 }
 
+.marker {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .marker:hover {
   transform: translate(-50%, -50%) scale(1.3);
 }

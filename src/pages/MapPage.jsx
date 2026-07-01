@@ -87,8 +87,8 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   }, []);
 
   useEffect(() => {
-    document.title = `${t('mapTitle')} - ${maps.find(m => m.id === selectedMap)?.name || ''}`;
-  }, [selectedMap, lang]);
+    document.title = `${t('mapTitle')} — ${maps.find(m => m.id === selectedMap)?.name || ''}`;
+  }, [selectedMap, lang, t]);
 
   const saveToFile = useCallback(async (data) => {
     try {
@@ -168,14 +168,6 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
     }
     if (e.shiftKey) return;
 
-    if (e.ctrlKey) {
-      e.stopPropagation();
-      const rect = e.currentTarget.getBoundingClientRect();
-      setGranadeMenu({ x: Math.round(((e.clientX - rect.left) / rect.width) * 10000) / 100, y: Math.round(((e.clientY - rect.top) / rect.height) * 10000) / 100 });
-      setSidePanel(null); setDrawingLine(null); setExpandedGroup(null);
-      return;
-    }
-
     e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100, y = ((e.clientY - rect.top) / rect.height) * 100;
@@ -216,45 +208,79 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   };
 
   const handleMarkerMouseDown = (e, marker) => {
-    if (!editMode || e.shiftKey) return;
-    e.preventDefault(); e.stopPropagation();
+    if (!editMode) return;
+    e.preventDefault();
+    e.stopPropagation();
+
     setWasDragging(false);
-    const startX = e.clientX, startY = e.clientY;
-    const origX = marker.x, origY = marker.y;
-    const origDisplayX = marker.displayX || marker.x, origDisplayY = marker.displayY || marker.y;
+
+    const isTouch = e.type === 'touchstart';
+    const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+    const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+
+    const startX = clientX;
+    const startY = clientY;
+    const origX = marker.x;
+    const origY = marker.y;
+    const origDisplayX = marker.displayX || marker.x;
+    const origDisplayY = marker.displayY || marker.y;
     let moved = false;
 
     const mm = (me) => {
       moved = true;
       const rect = mapRef.current.getBoundingClientRect();
-      const dx = ((me.clientX - startX) / rect.width) * 100;
-      const dy = ((me.clientY - startY) / rect.height) * 100;
-      setMarkers(prev => prev.map(m => m.id === marker.id ? { ...m, x: Math.round((origX + dx) * 100) / 100, y: Math.round((origY + dy) * 100) / 100, displayX: origDisplayX + dx, displayY: origDisplayY + dy } : m));
+      const moveX = me.touches ? me.touches[0].clientX : me.clientX;
+      const moveY = me.touches ? me.touches[0].clientY : me.clientY;
+      const dx = ((moveX - startX) / rect.width) * 100;
+      const dy = ((moveY - startY) / rect.height) * 100;
+
+      setMarkers(prev => prev.map(m => m.id === marker.id ? {
+        ...m,
+        x: Math.round((origX + dx) * 100) / 100,
+        y: Math.round((origY + dy) * 100) / 100,
+        displayX: origDisplayX + dx,
+        displayY: origDisplayY + dy,
+      } : m));
     };
 
     const mu = () => {
       document.removeEventListener('mousemove', mm);
       document.removeEventListener('mouseup', mu);
+      document.removeEventListener('touchmove', mm);
+      document.removeEventListener('touchend', mu);
       if (!moved) return;
+
       setWasDragging(true);
+
       setMarkers(prev => {
         const movedMarker = prev.find(m => m.id === marker.id);
         if (!movedMarker) return prev;
-        const nearby = prev.find(m => m.mapId === selectedMap && m.id !== marker.id && Math.abs(m.x - movedMarker.x) < 1.5 && Math.abs(m.y - movedMarker.y) < 1.5);
+
+        const nearby = prev.find(m =>
+          m.mapId === selectedMap &&
+          m.id !== marker.id &&
+          Math.abs(m.x - movedMarker.x) < 1.5 &&
+          Math.abs(m.y - movedMarker.y) < 1.5
+        );
+
         if (nearby) {
           let updated = prev.map(m => m.id === marker.id ? { ...m, x: nearby.x, y: nearby.y, displayX: nearby.x, displayY: nearby.y } : m);
           updated = recalculateGroup(updated, nearby.x, nearby.y, selectedMap);
           saveToFile(updated); setExpandedGroup(null);
           return updated;
         }
+
         let updated = recalculateGroup(prev, origX, origY, selectedMap);
         updated = updated.map(m => m.id === marker.id && !updated.some(u => u.id !== m.id && Math.abs(u.x - m.x) < 1.5 && Math.abs(u.y - m.y) < 1.5) ? { ...m, displayX: m.x, displayY: m.y } : m);
         saveToFile(updated); setExpandedGroup(null);
         return updated;
       });
     };
+
     document.addEventListener('mousemove', mm);
     document.addEventListener('mouseup', mu);
+    document.addEventListener('touchmove', mm, { passive: false });
+    document.addEventListener('touchend', mu);
   };
 
   const handleGroupMouseDown = (e, groupKey) => {
@@ -395,8 +421,13 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                   const top = `${(marker.displayY || marker.y)}%`;
                   return (
                     <div key={marker.id} className={`marker ${drawingLine?.markerId === marker.id ? 'drawing' : ''}`} style={{ left, top }}
-                      onMouseDown={(e) => handleMarkerMouseDown(e, marker)} onClick={(e) => handleMarkerClick(e, marker)}
-                      onContextMenu={(e) => handleMarkerRightClick(e, marker.id)} onMouseEnter={() => handleMarkerHover(marker)} onMouseLeave={handleMarkerLeave} title={type?.type}>
+                      onMouseDown={(e) => handleMarkerMouseDown(e, marker)}
+                      onTouchStart={(e) => handleMarkerMouseDown(e, marker)}
+                      onClick={(e) => handleMarkerClick(e, marker)}
+                      onContextMenu={(e) => handleMarkerRightClick(e, marker.id)}
+                      onMouseEnter={() => handleMarkerHover(marker)}
+                      onMouseLeave={handleMarkerLeave}
+                      title={type?.type}>
                       <img src={type?.icon} alt={type?.type} className="marker-icon-img" />
                     </div>
                   );
@@ -411,8 +442,13 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                           const top = `${(marker.displayY || marker.y)}%`;
                           return (
                             <div key={marker.id} className={`marker ${drawingLine?.markerId === marker.id ? 'drawing' : ''}`} style={{ left, top }}
-                              onMouseDown={(e) => handleMarkerMouseDown(e, marker)} onClick={(e) => handleMarkerClick(e, marker)}
-                              onContextMenu={(e) => handleMarkerRightClick(e, marker.id)} onMouseEnter={() => handleMarkerHover(marker)} onMouseLeave={handleMarkerLeave} title={type?.type}>
+                              onMouseDown={(e) => handleMarkerMouseDown(e, marker)}
+                              onTouchStart={(e) => handleMarkerMouseDown(e, marker)}
+                              onClick={(e) => handleMarkerClick(e, marker)}
+                              onContextMenu={(e) => handleMarkerRightClick(e, marker.id)}
+                              onMouseEnter={() => handleMarkerHover(marker)}
+                              onMouseLeave={handleMarkerLeave}
+                              title={type?.type}>
                               <img src={type?.icon} alt={type?.type} className="marker-icon-img" />
                             </div>
                           );
@@ -470,55 +506,6 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
           </div>
         )}
       </main>
-
-      {editMode && (
-        <div className="mobile-tools">
-          <button
-            className="mobile-tool-btn"
-            onClick={() => {
-              if (expandedGroup) { collapseGroup(expandedGroup); setExpandedGroup(null); }
-              setGranadeMenu(null); setSidePanel(null);
-              // Открыть меню создания гранаты в центре карты
-              setGranadeMenu({ x: 50, y: 50 });
-            }}
-          >
-            <img src="/icons/plus.svg" alt="Add" />
-          </button>
-          <button
-            className="mobile-tool-btn"
-            onClick={() => {
-              // Включить режим группировки
-              if (sidePanel?.marker) {
-                const marker = sidePanel.marker;
-                setGranadeMenu({ x: marker.x, y: marker.y });
-              }
-            }}
-          >
-            <img src="/icons/group.svg" alt="Group" />
-          </button>
-          <button
-            className="mobile-tool-btn"
-            onClick={() => {
-              // Включить режим траектории
-              if (sidePanel?.marker) {
-                setDrawingLine({ markerId: sidePanel.marker.id, fromX: sidePanel.marker.x, fromY: sidePanel.marker.y });
-              }
-            }}
-          >
-            <img src="/icons/line.svg" alt="Line" />
-          </button>
-          <button
-            className="mobile-tool-btn danger"
-            onClick={() => {
-              if (sidePanel?.marker) {
-                handleMarkerRightClick(new Event('click'), sidePanel.marker.id);
-              }
-            }}
-          >
-            <img src="/icons/trash.svg" alt="Delete" />
-          </button>
-        </div>
-      )}
     </>
   );
 }
