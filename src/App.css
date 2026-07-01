@@ -954,13 +954,21 @@ kbd {
 
 /* Полноэкранный просмотр */
 .fullscreen-image {
-  max-width: 95%;
-  max-height: 90vh; /* Ограничение высоты */
+  max-width: 90%;
+  max-height: 90vh;
   width: auto;
   height: auto;
   object-fit: contain;
   border-radius: 12px;
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+}
+
+/* На ПК - больше размер */
+@media (min-width: 769px) {
+  .fullscreen-image {
+    max-width: 85vw;
+    max-height: 90vh;
+  }
 }
 
 .fullscreen-close {
