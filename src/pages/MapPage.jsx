@@ -63,19 +63,45 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
       .then(res => res.json())
       .then(data => {
         const content = data.files['markers.json']?.content;
-        if (!content) return [];
+        if (!content) {
+          setMarkers([]);
+          setLoading(false);
+          return;
+        }
         const parsed = JSON.parse(content);
-        const fixed = parsed.map(m => ({
-          ...m,
-          displayX: m.displayX ?? m.x,
-          displayY: m.displayY ?? m.y,
-          lineTo: m.lineTo || null,
-          bendX: m.bendX || 0,
-          bendY: m.bendY || 0,
-          throwType: m.throwType || '',
-          videoUrl: m.videoUrl || '',
-          side: m.side || '',
-        }));
+        const fixed = parsed.map(m => {
+          const hasLineTo = m.lineTo && m.lineTo.x !== undefined && m.lineTo.y !== undefined;
+
+          let bendAbsoluteX = m.bendAbsoluteX;
+          let bendAbsoluteY = m.bendAbsoluteY;
+
+          // Если нет абсолютных координат, но есть линия и старые bend
+          if ((bendAbsoluteX === undefined || bendAbsoluteX === null) && hasLineTo) {
+            const sx = m.lineTo.x * 8;
+            const sy = m.lineTo.y * 6;
+            const ex = (m.displayX ?? m.x) * 8;
+            const ey = (m.displayY ?? m.y) * 6;
+            const midX = (sx + ex) / 2;
+            const midY = (sy + ey) / 2;
+            bendAbsoluteX = midX + (m.bendX || 0);
+            bendAbsoluteY = midY + (m.bendY || 0);
+          } else if (!hasLineTo) {
+            bendAbsoluteX = 0;
+            bendAbsoluteY = 0;
+          }
+
+          return {
+            ...m,
+            displayX: m.displayX ?? m.x,
+            displayY: m.displayY ?? m.y,
+            lineTo: hasLineTo ? m.lineTo : null,
+            bendAbsoluteX: bendAbsoluteX || 0,
+            bendAbsoluteY: bendAbsoluteY || 0,
+            throwType: m.throwType || '',
+            videoUrl: m.videoUrl || '',
+            side: m.side || '',
+          };
+        });
         setMarkers(fixed);
       })
       .catch(() => setMarkers([]))
@@ -135,7 +161,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
     const [gx, gy] = groupKey.split(',').map(Number);
     const collapsed = markers.map(m => {
       if (Math.abs(m.x - gx) < 1.5 && Math.abs(m.y - gy) < 1.5) {
-        return { ...m, displayX: gx, displayY: gy, bendX: 0, bendY: 0 };
+        return { ...m, displayX: gx, displayY: gy, bendAbsoluteX: 0, bendAbsoluteY: 0 };
       }
       return m;
     });
@@ -182,7 +208,23 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   const handleSelectGranade = (type, e) => {
     if (!granadeMenu) return;
     e.stopPropagation();
-    const newMarker = { id: Date.now(), mapId: selectedMap, x: granadeMenu.x, y: granadeMenu.y, displayX: granadeMenu.x, displayY: granadeMenu.y, type, videoUrl: '', lineTo: null, bendX: 0, bendY: 0, throwType: '', side: '' };
+    const newMarker = {
+      id: Date.now(),
+      mapId: selectedMap,
+      x: granadeMenu.x,
+      y: granadeMenu.y,
+      displayX: granadeMenu.x,
+      displayY: granadeMenu.y,
+      type,
+      videoUrl: '',
+      lineTo: null,
+      bendX: 0,
+      bendY: 0,
+      bendAbsoluteX: 0,
+      bendAbsoluteY: 0,
+      throwType: '',
+      side: ''
+    };
     const updated = recalculateGroup([...markers, newMarker], granadeMenu.x, granadeMenu.y, selectedMap);
     updateMarkers(updated);
     setGranadeMenu(null);
@@ -237,13 +279,18 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
       const dx = ((moveX - startX) / rect.width) * 100;
       const dy = ((moveY - startY) / rect.height) * 100;
 
-      setMarkers(prev => prev.map(m => m.id === marker.id ? {
-        ...m,
-        x: Math.round((origX + dx) * 100) / 100,
-        y: Math.round((origY + dy) * 100) / 100,
-        displayX: origDisplayX + dx,
-        displayY: origDisplayY + dy,
-      } : m));
+      setMarkers(prev => prev.map(m => {
+        if (m.id === marker.id) {
+          return {
+            ...m,
+            x: Math.round((origX + dx) * 100) / 100,
+            y: Math.round((origY + dy) * 100) / 100,
+            displayX: origDisplayX + dx,
+            displayY: origDisplayY + dy
+          };
+        }
+        return m;
+      }));
     };
 
     const mu = () => {
@@ -266,21 +313,20 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
           Math.abs(m.y - movedMarker.y) < 1.5
         );
 
-        if (nearby) {
-          let updated = prev.map(m => m.id === marker.id ? { ...m, x: nearby.x, y: nearby.y, displayX: nearby.x, displayY: nearby.y } : m);
-          updated = recalculateGroup(updated, nearby.x, nearby.y, selectedMap);
-          saveToFile(updated);
-          setExpandedGroup(null);
-          return updated;
-        }
+        let updated;
 
-        const updated = prev.map(m => {
-          if (m.id === marker.id) {
-            const isAlone = !prev.some(u => u.id !== m.id && u.mapId === selectedMap && Math.abs(u.x - m.x) < 1.5 && Math.abs(u.y - m.y) < 1.5);
-            return { ...m, displayX: isAlone ? m.x : m.displayX, displayY: isAlone ? m.y : m.displayY };
-          }
-          return m;
-        });
+        if (nearby) {
+          updated = prev.map(m => m.id === marker.id ? { ...m, x: nearby.x, y: nearby.y, displayX: nearby.x, displayY: nearby.y } : m);
+          updated = recalculateGroup(updated, nearby.x, nearby.y, selectedMap);
+        } else {
+          updated = prev.map(m => {
+            if (m.id === marker.id) {
+              const isAlone = !prev.some(u => u.id !== m.id && u.mapId === selectedMap && Math.abs(u.x - m.x) < 1.5 && Math.abs(u.y - m.y) < 1.5);
+              return { ...m, displayX: isAlone ? m.x : m.displayX, displayY: isAlone ? m.y : m.displayY };
+            }
+            return m;
+          });
+        }
 
         saveToFile(updated);
         setExpandedGroup(null);
@@ -307,7 +353,13 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
     const [gx, gy] = groupKey.split(',').map(Number);
     const startX = clientX, startY = clientY;
     const groupMarkers = markers.filter(m => m.mapId === selectedMap && Math.abs(m.x - gx) < 1.5 && Math.abs(m.y - gy) < 1.5);
-    const origValues = groupMarkers.map(m => ({ id: m.id, x: m.x, y: m.y, displayX: m.displayX || m.x, displayY: m.displayY || m.y }));
+    const origValues = groupMarkers.map(m => ({
+      id: m.id,
+      x: m.x,
+      y: m.y,
+      displayX: m.displayX || m.x,
+      displayY: m.displayY || m.y
+    }));
 
     const mm = (me) => {
       const rect = mapRef.current.getBoundingClientRect();
@@ -315,9 +367,19 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
       const moveY = me.touches ? me.touches[0].clientY : me.clientY;
       const dx = ((moveX - startX) / rect.width) * 100;
       const dy = ((moveY - startY) / rect.height) * 100;
+
       setMarkers(prev => prev.map(m => {
         const o = origValues.find(ov => ov.id === m.id);
-        return o ? { ...m, x: Math.round((o.x + dx) * 100) / 100, y: Math.round((o.y + dy) * 100) / 100, displayX: o.displayX + dx, displayY: o.displayY + dy } : m;
+        if (!o) return m;
+
+        return {
+          ...m,
+          x: Math.round((o.x + dx) * 100) / 100,
+          y: Math.round((o.y + dy) * 100) / 100,
+          displayX: o.displayX + dx,
+          displayY: o.displayY + dy
+          // lineTo, bendX, bendY не трогаем
+        };
       }));
     };
 
@@ -360,15 +422,29 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
     e.stopPropagation();
     e.preventDefault();
 
-    const isTouch = e.type === 'touchstart';
-    const sx = isTouch ? e.touches[0].clientX : e.clientX;
-    const sy = isTouch ? e.touches[0].clientY : e.clientY;
-    const sbx = marker.bendX || 0, sby = marker.bendY || 0;
+    const svgElement = document.querySelector('.lines-svg');
+    const svgRect = svgElement.getBoundingClientRect();
+
+    let currentMarkers = [...markers];
 
     const mm = (me) => {
       const moveX = me.touches ? me.touches[0].clientX : me.clientX;
       const moveY = me.touches ? me.touches[0].clientY : me.clientY;
-      setMarkers(prev => prev.map(m => m.id === marker.id ? { ...m, bendX: sbx + moveX - sx, bendY: sby + moveY - sy } : m));
+
+      // Абсолютная позиция в SVG
+      const newMx = ((moveX - svgRect.left) / svgRect.width) * 800;
+      const newMy = ((moveY - svgRect.top) / svgRect.height) * 600;
+
+      setMarkers(prev => {
+        currentMarkers = prev.map(m =>
+          m.id === marker.id ? {
+            ...m,
+            bendAbsoluteX: newMx,
+            bendAbsoluteY: newMy
+          } : m
+        );
+        return currentMarkers;
+      });
     };
 
     const mu = () => {
@@ -376,7 +452,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
       document.removeEventListener('mouseup', mu);
       document.removeEventListener('touchmove', mm);
       document.removeEventListener('touchend', mu);
-      saveToFile(markers);
+      saveToFile(currentMarkers);
     };
 
     document.addEventListener('mousemove', mm);
@@ -387,7 +463,16 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
 
   const handleThrowTypeChange = (v) => { if (!sidePanel) return; updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, throwType: v } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, throwType: v } })); };
   const handleSideChange = (v) => { if (!sidePanel) return; updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, side: v } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, side: v } })); };
-  const handleDeleteLine = () => { if (!sidePanel) return; updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, lineTo: null, bendX: 0, bendY: 0 } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, lineTo: null } })); };
+  const handleDeleteLine = () => {
+    if (!sidePanel) return;
+    updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? {
+      ...m,
+      lineTo: null,
+      bendAbsoluteX: 0,
+      bendAbsoluteY: 0
+    } : m));
+    setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, lineTo: null } }));
+  };
   const handleDeleteVideo = () => { if (!sidePanel) return; updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, videoUrl: '' } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, videoUrl: '' } })); };
 
   const currentMarkers = markers.filter(m => m.mapId === selectedMap);
@@ -451,25 +536,37 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
 
                   const sx = marker.lineTo.x * 8;
                   const sy = marker.lineTo.y * 6;
-                  const mx = (sx + ex) / 2 + (marker.bendX || 0);
-                  const my = (sy + ey) / 2 + (marker.bendY || 0);
+
+                  // Вычисляем середину
+                  const midX = (sx + ex) / 2;
+                  const midY = (sy + ey) / 2;
+
+                  // Используем абсолютные координаты если есть, иначе старый bend
+                  const mx = (marker.bendAbsoluteX != null && marker.bendAbsoluteX !== 0)
+                    ? marker.bendAbsoluteX
+                    : midX + (marker.bendX || 0);
+                  const my = (marker.bendAbsoluteY != null && marker.bendAbsoluteY !== 0)
+                    ? marker.bendAbsoluteY
+                    : midY + (marker.bendY || 0);
 
                   return (
                     <g key={`line-${marker.id}`}>
                       <line x1={sx} y1={sy} x2={mx} y2={my} stroke="white" strokeWidth="2" strokeDasharray="6,3" style={{ pointerEvents: 'none' }} />
                       <line x1={mx} y1={my} x2={ex} y2={ey} stroke="white" strokeWidth="2" strokeDasharray="6,3" style={{ pointerEvents: 'none' }} />
                       <circle cx={sx} cy={sy} r="5" fill="white" opacity="0.9" style={{ pointerEvents: 'none' }} />
-                      {editMode && <circle
-                        cx={mx}
-                        cy={my}
-                        r="4"
-                        fill="white"
-                        stroke="#1a1a2e"
-                        strokeWidth="2"
-                        style={{ cursor: 'move', pointerEvents: 'auto' }}
-                        onMouseDown={(e) => handleBendMouseDown(e, marker)}
-                        onTouchStart={(e) => handleBendMouseDown(e, marker)}
-                      />}
+                      {editMode && marker.lineTo && (
+                        <circle
+                          cx={mx}
+                          cy={my}
+                          r="6"
+                          fill="#e94560"
+                          stroke="white"
+                          strokeWidth="2"
+                          style={{ cursor: 'move', pointerEvents: 'auto' }}
+                          onMouseDown={(e) => handleBendMouseDown(e, marker)}
+                          onTouchStart={(e) => handleBendMouseDown(e, marker)}
+                        />
+                      )}
                     </g>
                   );
                 })}
