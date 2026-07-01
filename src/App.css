@@ -968,10 +968,11 @@ kbd {
 /* На ПК - больше размер */
 @media (min-width: 769px) {
   .fullscreen-image {
-    max-width: 90vw;
-    max-height: none; /* Убираем ограничение высоты */
+    max-width: 150vw;
+    max-height: 150vh;
   }
 }
+
 .fullscreen-close {
   position: absolute;
   top: 20px;
