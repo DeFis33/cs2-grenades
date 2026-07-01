@@ -121,7 +121,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
     return markersArray.map(m => {
       const idx = groupMembers.findIndex(gm => gm.id === m.id);
       if (idx !== -1) {
-        return { ...m, displayX: groupX + idx * 4, displayY: groupY };
+        return { ...m, displayX: groupX + idx * 6, displayY: groupY };
       }
       return m;
     });
@@ -209,12 +209,12 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
 
   const handleMarkerMouseDown = (e, marker) => {
     if (!editMode) return;
+    const isTouch = e.type === 'touchstart';
     e.preventDefault();
     e.stopPropagation();
 
     setWasDragging(false);
 
-    const isTouch = e.type === 'touchstart';
     const clientX = isTouch ? e.touches[0].clientX : e.clientX;
     const clientY = isTouch ? e.touches[0].clientY : e.clientY;
 
@@ -266,13 +266,21 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
         if (nearby) {
           let updated = prev.map(m => m.id === marker.id ? { ...m, x: nearby.x, y: nearby.y, displayX: nearby.x, displayY: nearby.y } : m);
           updated = recalculateGroup(updated, nearby.x, nearby.y, selectedMap);
-          saveToFile(updated); setExpandedGroup(null);
+          saveToFile(updated);
+          setExpandedGroup(null);
           return updated;
         }
 
-        let updated = recalculateGroup(prev, origX, origY, selectedMap);
-        updated = updated.map(m => m.id === marker.id && !updated.some(u => u.id !== m.id && Math.abs(u.x - m.x) < 1.5 && Math.abs(u.y - m.y) < 1.5) ? { ...m, displayX: m.x, displayY: m.y } : m);
-        saveToFile(updated); setExpandedGroup(null);
+        const updated = prev.map(m => {
+          if (m.id === marker.id) {
+            const isAlone = !prev.some(u => u.id !== m.id && u.mapId === selectedMap && Math.abs(u.x - m.x) < 1.5 && Math.abs(u.y - m.y) < 1.5);
+            return { ...m, displayX: isAlone ? m.x : m.displayX, displayY: isAlone ? m.y : m.displayY };
+          }
+          return m;
+        });
+
+        saveToFile(updated);
+        setExpandedGroup(null);
         return updated;
       });
     };
@@ -286,9 +294,10 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   const handleGroupMouseDown = (e, groupKey) => {
     if (!editMode) return;
     e.stopPropagation();
-    e.preventDefault();
 
     const isTouch = e.type === 'touchstart';
+    if (isTouch) e.preventDefault();
+
     const clientX = isTouch ? e.touches[0].clientX : e.clientX;
     const clientY = isTouch ? e.touches[0].clientY : e.clientY;
 
@@ -363,12 +372,6 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
     document.addEventListener('mouseup', mu);
     document.addEventListener('touchmove', mm, { passive: false });
     document.addEventListener('touchend', mu);
-  };
-
-  const handleMobileLine = () => {
-    if (!sidePanel?.marker) return;
-    setDrawingLine({ markerId: sidePanel.marker.id, fromX: sidePanel.marker.x, fromY: sidePanel.marker.y });
-    setGranadeMenu(null);
   };
 
   const handleThrowTypeChange = (v) => { if (!sidePanel) return; updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, throwType: v } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, throwType: v } })); };
@@ -512,7 +515,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                             </div>
                           );
                         })}
-                        <div className="marker group-close-marker" style={{ left: `${gx + group.length * 4}%`, top: `${gy}%` }}
+                        <div className="marker group-close-marker" style={{ left: `${gx + group.length * 6}%`, top: `${gy}%` }}
                           onClick={(e) => { e.stopPropagation(); collapseGroup(key); setExpandedGroup(null); }} title={t('collapse')}><span className="close-icon">✕</span></div>
                       </>
                     ) : (
