@@ -470,6 +470,55 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
           </div>
         )}
       </main>
+
+      {editMode && (
+        <div className="mobile-tools">
+          <button
+            className="mobile-tool-btn"
+            onClick={() => {
+              if (expandedGroup) { collapseGroup(expandedGroup); setExpandedGroup(null); }
+              setGranadeMenu(null); setSidePanel(null);
+              // Открыть меню создания гранаты в центре карты
+              setGranadeMenu({ x: 50, y: 50 });
+            }}
+          >
+            <img src="/icons/plus.svg" alt="Add" />
+          </button>
+          <button
+            className="mobile-tool-btn"
+            onClick={() => {
+              // Включить режим группировки
+              if (sidePanel?.marker) {
+                const marker = sidePanel.marker;
+                setGranadeMenu({ x: marker.x, y: marker.y });
+              }
+            }}
+          >
+            <img src="/icons/group.svg" alt="Group" />
+          </button>
+          <button
+            className="mobile-tool-btn"
+            onClick={() => {
+              // Включить режим траектории
+              if (sidePanel?.marker) {
+                setDrawingLine({ markerId: sidePanel.marker.id, fromX: sidePanel.marker.x, fromY: sidePanel.marker.y });
+              }
+            }}
+          >
+            <img src="/icons/line.svg" alt="Line" />
+          </button>
+          <button
+            className="mobile-tool-btn danger"
+            onClick={() => {
+              if (sidePanel?.marker) {
+                handleMarkerRightClick(new Event('click'), sidePanel.marker.id);
+              }
+            }}
+          >
+            <img src="/icons/trash.svg" alt="Delete" />
+          </button>
+        </div>
+      )}
     </>
   );
 }
