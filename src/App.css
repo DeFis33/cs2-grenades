@@ -1189,15 +1189,3 @@ ul, li {
     height: 100px;
   }
 }
-
-/* На мобилках можно скроллить если не влезает */
-@media (max-width: 768px) {
-  .modal-overlay {
-    align-items: flex-start;
-    padding-top: 60px;
-  }
-  
-  .fullscreen-image {
-    max-height: none; /* На мобилке убираем ограничение */
-  }
-}
