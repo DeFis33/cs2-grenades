@@ -511,9 +511,39 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
             )}
           </div>
         )}
-        {editMode && drawingLine && (
-          <div className="mobile-line-hint" onClick={() => setDrawingLine(null)}>
-            {t('shiftHint')}
+        {editMode && (
+          <div className="mobile-tools">
+            <button
+              className="mobile-tool-btn"
+              onClick={() => {
+                if (expandedGroup) { collapseGroup(expandedGroup); setExpandedGroup(null); }
+                setGranadeMenu(null);
+                setGranadeMenu({ x: 50, y: 50 });
+              }}
+            >
+              +
+            </button>
+            {sidePanel?.marker && (
+              <>
+                <button
+                  className="mobile-tool-btn"
+                  onClick={() => {
+                    setDrawingLine({ markerId: sidePanel.marker.id, fromX: sidePanel.marker.x, fromY: sidePanel.marker.y });
+                    setSidePanel(null);
+                  }}
+                >
+                  ───▶
+                </button>
+                <button
+                  className="mobile-tool-btn"
+                  onClick={() => {
+                    handleMarkerRightClick(new MouseEvent('click'), sidePanel.marker.id);
+                  }}
+                >
+                  ✕
+                </button>
+              </>
+            )}
           </div>
         )}
       </main>

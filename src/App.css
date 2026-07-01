@@ -965,3 +965,29 @@ ul, li {
     display: block;
   }
 }
+
+@media (max-width: 768px) {
+  .dropdown {
+    padding: 4px 0;
+  }
+
+  .dropdown-item a {
+    padding: 16px 20px;
+    font-size: 17px;
+  }
+
+  .lang-dropdown {
+    padding: 4px 0;
+  }
+
+  .lang-item {
+    padding: 14px 20px;
+    font-size: 16px;
+  }
+
+  .guide-dropdown-inner {
+    padding: 16px 20px;
+    font-size: 15px;
+    line-height: 2.5;
+  }
+}
