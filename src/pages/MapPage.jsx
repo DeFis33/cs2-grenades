@@ -594,16 +594,18 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                 setDrawingLine({ markerId: sidePanel.marker.id, fromX: sidePanel.marker.x, fromY: sidePanel.marker.y });
                 setSidePanel(null);
               }}
+              title={t('guideShiftMarker')}
             >
-              ───▶
+              <img src="/icons/trajectory.svg" alt="Line" className="mobile-tool-icon" />
             </button>
             <button
               className="mobile-tool-btn"
               onClick={() => {
                 handleMarkerRightClick(new MouseEvent('click'), sidePanel.marker.id);
               }}
+              title={t('guideRightClick')}
             >
-              ✕
+              <img src="/icons/delete.svg" alt="Delete" className="mobile-tool-icon" />
             </button>
           </div>
         )}
