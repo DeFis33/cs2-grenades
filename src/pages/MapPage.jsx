@@ -673,20 +673,22 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                           placeholder="Ссылка на изображение (Cloudinary)"
                           value={sidePanel.marker.newImageUrl || ''}
                           onChange={(e) => {
-                            const updatedMarker = { ...sidePanel.marker, newImageUrl: e.target.value };
+                            const url = e.target.value;
+                            const updatedMarker = { ...sidePanel.marker, newImageUrl: url };
+
+                            // Если вставили ссылку — сразу добавляем
+                            if (url && url.startsWith('http')) {
+                              updatedMarker.images = [...(sidePanel.marker.images || []), url];
+                              updatedMarker.newImageUrl = '';
+                            }
+
                             setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && e.target.value) {
-                              const updatedMarker = {
-                                ...sidePanel.marker,
-                                images: [...(sidePanel.marker.images || []), e.target.value],
-                                newImageUrl: ''
-                              };
+
+                            // Сохраняем если добавили
+                            if (updatedMarker.images.length > (sidePanel.marker.images || []).length) {
                               updateMarkers(markers.map(m =>
                                 m.id === sidePanel.marker.id ? updatedMarker : m
                               ));
-                              setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
                             }
                           }}
                         />
