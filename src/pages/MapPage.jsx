@@ -52,6 +52,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   const [expandedGroup, setExpandedGroup] = useState(null);
   const [guideOpen, setGuideOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState(null);
+  const [activeFilter, setActiveFilter] = useState(null);
   const mapRef = useRef(null);
   const { lang, t } = useLanguage();
 
@@ -477,9 +478,38 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   };
   const handleDeleteVideo = () => { if (!sidePanel) return; updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, videoUrl: '' } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, videoUrl: '' } })); };
 
-  const currentMarkers = markers.filter(m => m.mapId === selectedMap);
+  const currentMarkers = markers.filter(m => {
+    if (m.mapId !== selectedMap) return false;
+    if (activeFilter === null) return true;
+    return m.type === activeFilter;
+  });
+
+  // Пересчитываем позиции при активном фильтре
+  const filteredMarkers = activeFilter === null ? currentMarkers : (() => {
+    const spacing = getSpacing();
+    const grouped = {};
+
+    currentMarkers.forEach(m => {
+      const key = `${m.x.toFixed(1)},${m.y.toFixed(1)}`;
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(m);
+    });
+
+    return currentMarkers.map(m => {
+      const key = `${m.x.toFixed(1)},${m.y.toFixed(1)}`;
+      const group = grouped[key];
+      const idx = group.findIndex(gm => gm.id === m.id);
+
+      if (group.length > 1) {
+        const [gx, gy] = key.split(',').map(Number);
+        return { ...m, displayX: gx + idx * spacing, displayY: gy };
+      }
+      return { ...m, displayX: m.x, displayY: m.y };
+    });
+  })();
+
   const groupedMarkers = {};
-  currentMarkers.forEach(m => {
+  filteredMarkers.forEach(m => {
     const key = `${m.x.toFixed(1)},${m.y.toFixed(1)}`;
     if (!groupedMarkers[key]) groupedMarkers[key] = [];
     groupedMarkers[key].push(m);
@@ -514,6 +544,26 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
       <main className="main">
         {loading ? <p style={{ color: '#a0aec0' }}>{t('loading')}</p> : (
           <div className="map-wrapper">
+            {/* Панель фильтров */}
+            <div className="filter-panel">
+              <button
+                className={`filter-btn ${activeFilter === null ? 'active' : ''}`}
+                onClick={() => setActiveFilter(null)}
+                title={t('all')}
+              >
+                {t('all')}
+              </button>
+              {granadeTypes.map(g => (
+                <button
+                  key={g.type}
+                  className={`filter-btn ${activeFilter === g.type ? 'active' : ''}`}
+                  onClick={() => setActiveFilter(activeFilter === g.type ? null : g.type)}
+                  title={g.type}
+                >
+                  <img src={g.icon} alt={g.type} className="filter-icon" />
+                </button>
+              ))}
+            </div>
             <div className="map-container" onClick={handleMapClick} ref={mapRef}>
               <img src={`/maps/${imageName}`} alt={selectedMap} className="map-image" />
 
@@ -670,13 +720,12 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                         <input
                           type="text"
                           className="video-url-input"
-                          placeholder="Ссылка на изображение (Cloudinary)"
+                          placeholder={t('imagePlaceholder')}
                           value={sidePanel.marker.newImageUrl || ''}
                           onChange={(e) => {
                             const url = e.target.value;
                             const updatedMarker = { ...sidePanel.marker, newImageUrl: url };
 
-                            // Если вставили ссылку — сразу добавляем
                             if (url && url.startsWith('http')) {
                               updatedMarker.images = [...(sidePanel.marker.images || []), url];
                               updatedMarker.newImageUrl = '';
@@ -684,7 +733,6 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
 
                             setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
 
-                            // Сохраняем если добавили
                             if (updatedMarker.images.length > (sidePanel.marker.images || []).length) {
                               updateMarkers(markers.map(m =>
                                 m.id === sidePanel.marker.id ? updatedMarker : m
@@ -694,7 +742,6 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                         />
                       </div>
 
-                      {/* Галерея */}
                       {sidePanel.marker.images && sidePanel.marker.images.length > 0 && (
                         <div className="images-gallery">
                           {sidePanel.marker.images.map((img, index) => (
@@ -734,7 +781,6 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                   <>
                     <div className="video-container">{sidePanel.marker.videoUrl ? <video src={sidePanel.marker.videoUrl} controls className="side-video" /> : <p className="no-video">{t('noVideo')}</p>}</div>
 
-                    {/* Изображения в режиме просмотра */}
                     {sidePanel.marker.images && sidePanel.marker.images.length > 0 && (
                       <div className="images-gallery">
                         {sidePanel.marker.images.map((img, index) => (
@@ -754,7 +800,6 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
           </div>
         )}
 
-        {/* Модальное окно для просмотра изображения */}
         {fullscreenImage && (
           <div className="modal-overlay" onClick={() => setFullscreenImage(null)}>
             <img
