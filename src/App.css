@@ -592,7 +592,9 @@ body {
 
 .group-count { line-height: 1; }
 
-.guide-container { position: relative; }
+.guide-container {
+  position: relative;
+}
 
 .guide-icon-btn {
   width: 36px;
@@ -627,7 +629,10 @@ body {
   z-index: 200;
 }
 
-.guide-container:hover .guide-dropdown { display: block; }
+.guide-container:hover .guide-dropdown,
+.guide-container.active .guide-dropdown {
+  display: block;
+}
 
 .guide-dropdown-inner {
   background-color: #1a1a2e;
@@ -822,48 +827,6 @@ kbd {
   }
 }
 
-@media (max-width: 768px) {
-  .header-inner { padding: 8px 12px; flex-wrap: wrap; gap: 8px; }
-  .header-logo-img { width: 140px; }
-
-  .main { padding: 8px; align-items: flex-start; }
-  .map-wrapper { width: 100%; flex-direction: column; align-items: center; }
-  .map-container { width: 100%; }
-  .map-image { border-radius: 8px; max-height: calc(100vh - 68px); object-fit: contain; }
-  .side-panel {
-    position: relative;
-    left: auto; right: auto; top: auto;
-    width: 100%; max-width: 100%; max-height: none;
-    border-radius: 12px;
-    margin-top: 10px;
-    padding: 16px 12px;
-  }
-  .marker { width: 24px; height: 24px; }
-  .marker-icon-img { width: 16px; height: 16px; }
-  .group-marker { width: 24px; height: 24px; font-size: 11px; }
-  .granade-option { width: 36px; height: 36px; }
-  .granade-option-img { width: 20px; height: 20px; }
-  .granade-pos-0 { top: -44px; left: -18px; }
-  .granade-pos-1 { top: -18px; left: 26px; }
-  .granade-pos-2 { top: 8px; left: -18px; }
-  .granade-pos-3 { top: -18px; left: -62px; }
-  .login-modal { width: 95%; padding: 20px; }
-  .login-title { font-size: 18px; }
-  .login-btn { padding: 10px; font-size: 14px; }
-  .drawing-hint { font-size: 11px; padding: 4px 12px; top: 6px; }
-  .guide-dropdown { width: 220px; font-size: 11px; right: -10px; }
-
-  .dropdown-item a {
-    padding: 14px 18px;
-    font-size: 16px;
-  }
-
-  .lang-item {
-    padding: 12px 16px;
-    font-size: 15px;
-  }
-}
-
 @media (max-width: 480px) {
   .header-inner { padding: 6px 8px; }
   .header-logo-img { width: 120px; }
@@ -939,12 +902,6 @@ ul, li {
   background-color: rgba(233, 69, 96, 0.3);
 }
 
-@media (max-width: 768px) {
-  .mobile-tools {
-    display: flex;
-  }
-}
-
 .mobile-line-hint {
   display: none;
   position: fixed;
@@ -958,38 +915,6 @@ ul, li {
   font-size: 14px;
   z-index: 500;
   cursor: pointer;
-}
-
-@media (max-width: 768px) {
-  .mobile-line-hint {
-    display: block;
-  }
-}
-
-@media (max-width: 768px) {
-  .dropdown {
-    padding: 4px 0;
-  }
-
-  .dropdown-item a {
-    padding: 16px 20px;
-    font-size: 17px;
-  }
-
-  .lang-dropdown {
-    padding: 4px 0;
-  }
-
-  .lang-item {
-    padding: 14px 20px;
-    font-size: 16px;
-  }
-
-  .guide-dropdown-inner {
-    padding: 16px 20px;
-    font-size: 15px;
-    line-height: 2.5;
-  }
 }
 
 .side-panel .throw-type-select,
@@ -1011,4 +936,100 @@ ul, li {
 .side-panel .delete-line-btn {
   padding: 12px 18px;
   font-size: 15px;
+}
+
+@media (max-width: 768px) {
+  .header-inner { padding: 8px 12px; flex-wrap: wrap; gap: 8px; }
+  .header-logo-img { width: 140px; }
+
+  .main { padding: 8px; align-items: flex-start; }
+  .map-wrapper { width: 100%; flex-direction: column; align-items: center; }
+  .map-container { width: 100%; }
+  .map-image { border-radius: 8px; max-height: calc(100vh - 68px); object-fit: contain; }
+  .side-panel {
+    position: relative;
+    left: auto; right: auto; top: auto;
+    width: 100%; max-width: 100%; max-height: none;
+    border-radius: 12px;
+    margin-top: 10px;
+    padding: 16px 12px;
+  }
+  .marker { width: 24px; height: 24px; }
+  .marker-icon-img { width: 16px; height: 16px; }
+  .group-marker { width: 24px; height: 24px; font-size: 11px; }
+  .granade-option { width: 36px; height: 36px; }
+  .granade-option-img { width: 20px; height: 20px; }
+  .granade-pos-0 { top: -44px; left: -18px; }
+  .granade-pos-1 { top: -18px; left: 26px; }
+  .granade-pos-2 { top: 8px; left: -18px; }
+  .granade-pos-3 { top: -18px; left: -62px; }
+  .login-modal { width: 95%; padding: 20px; }
+  .login-title { font-size: 18px; }
+  .login-btn { padding: 10px; font-size: 14px; }
+  .drawing-hint { font-size: 11px; padding: 4px 12px; top: 6px; }
+  .guide-dropdown { width: 220px; font-size: 11px; right: -10px; }
+
+  /* Дропдауны */
+  .dropdown {
+    padding: 8px 0;
+  }
+
+  .dropdown-item a {
+    padding: 16px 24px;
+    font-size: 17px;
+    line-height: 1.4;
+  }
+
+  .lang-dropdown {
+    padding: 8px 0;
+  }
+
+  .lang-item {
+    padding: 14px 24px;
+    font-size: 16px;
+  }
+
+  .guide-dropdown-inner {
+    padding: 16px 20px;
+    font-size: 15px;
+    line-height: 2.5;
+  }
+
+  /* Сайд-панель */
+  .side-panel .throw-type-select,
+  .side-panel .video-url-input {
+    padding: 14px 16px;
+    font-size: 16px;
+  }
+
+  .side-panel .throw-type-label {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .side-panel .side-btn {
+    width: 52px;
+    height: 52px;
+  }
+
+  .side-panel .delete-line-btn {
+    padding: 12px 18px;
+    font-size: 15px;
+  }
+
+  .mobile-tools {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    right: 8px;
+    bottom: 50%;
+    transform: translateY(50%);
+    left: auto;
+    padding: 8px 6px;
+    gap: 10px;
+  }
+
+  .mobile-line-hint {
+    display: block;
+  }
 }

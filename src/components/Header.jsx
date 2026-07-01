@@ -74,11 +74,13 @@ function Header({ editMode, guideOpen, setGuideOpen, onLogout, onLoginClick }) {
           </div>
 
           {editMode && !isHome && (
-            <div className="guide-container">
+            <div className={`guide-container ${guideOpen ? 'active' : ''}`}>
               <button
                 className="guide-icon-btn"
-                title={t('guide')}
-                onClick={(e) => { e.stopPropagation(); setGuideOpen(!guideOpen); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setGuideOpen(!guideOpen);
+                }}
               >
                 <img src="/icons/help.png" alt="?" className="guide-icon-img" />
               </button>
