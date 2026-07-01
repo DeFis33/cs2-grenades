@@ -954,6 +954,12 @@ ul, li {
     margin-top: 10px;
     padding: 16px 12px;
   }
+
+  .guide-item {
+    white-space: normal;
+    word-break: break-word;
+  }
+
   .marker { width: 24px; height: 24px; }
   .marker-icon-img { width: 16px; height: 16px; }
   .group-marker { width: 24px; height: 24px; font-size: 11px; }
@@ -967,8 +973,12 @@ ul, li {
   .login-title { font-size: 18px; }
   .login-btn { padding: 10px; font-size: 14px; }
   .drawing-hint { font-size: 11px; padding: 4px 12px; top: 6px; }
-  .guide-dropdown { width: 220px; font-size: 11px; right: -10px; }
-
+  .guide-dropdown {
+    width: auto;
+    max-width: 280px;
+    right: 0;
+    font-size: 13px;
+  }
   /* Дропдауны */
   .dropdown {
     padding: 8px 0;
@@ -991,7 +1001,7 @@ ul, li {
 
   .guide-dropdown-inner {
     padding: 16px 20px;
-    font-size: 15px;
+    font-size: 14px;
     line-height: 2.5;
   }
 

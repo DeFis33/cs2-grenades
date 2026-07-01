@@ -286,19 +286,41 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   const handleGroupMouseDown = (e, groupKey) => {
     if (!editMode) return;
     e.stopPropagation();
+    e.preventDefault();
+
+    const isTouch = e.type === 'touchstart';
+    const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+    const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+
     const [gx, gy] = groupKey.split(',').map(Number);
-    const startX = e.clientX, startY = e.clientY;
+    const startX = clientX, startY = clientY;
     const groupMarkers = markers.filter(m => m.mapId === selectedMap && Math.abs(m.x - gx) < 1.5 && Math.abs(m.y - gy) < 1.5);
     const origValues = groupMarkers.map(m => ({ id: m.id, x: m.x, y: m.y, displayX: m.displayX || m.x, displayY: m.displayY || m.y }));
+
     const mm = (me) => {
       const rect = mapRef.current.getBoundingClientRect();
-      const dx = ((me.clientX - startX) / rect.width) * 100;
-      const dy = ((me.clientY - startY) / rect.height) * 100;
-      setMarkers(prev => prev.map(m => { const o = origValues.find(ov => ov.id === m.id); return o ? { ...m, x: Math.round((o.x + dx) * 100) / 100, y: Math.round((o.y + dy) * 100) / 100, displayX: o.displayX + dx, displayY: o.displayY + dy } : m; }));
+      const moveX = me.touches ? me.touches[0].clientX : me.clientX;
+      const moveY = me.touches ? me.touches[0].clientY : me.clientY;
+      const dx = ((moveX - startX) / rect.width) * 100;
+      const dy = ((moveY - startY) / rect.height) * 100;
+      setMarkers(prev => prev.map(m => {
+        const o = origValues.find(ov => ov.id === m.id);
+        return o ? { ...m, x: Math.round((o.x + dx) * 100) / 100, y: Math.round((o.y + dy) * 100) / 100, displayX: o.displayX + dx, displayY: o.displayY + dy } : m;
+      }));
     };
-    const mu = () => { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu); saveToFile(markers); };
+
+    const mu = () => {
+      document.removeEventListener('mousemove', mm);
+      document.removeEventListener('mouseup', mu);
+      document.removeEventListener('touchmove', mm);
+      document.removeEventListener('touchend', mu);
+      saveToFile(markers);
+    };
+
     document.addEventListener('mousemove', mm);
     document.addEventListener('mouseup', mu);
+    document.addEventListener('touchmove', mm, { passive: false });
+    document.addEventListener('touchend', mu);
   };
 
   const handleGroupClick = (e, groupKey) => {
@@ -315,11 +337,32 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
 
   const handleBendMouseDown = (e, marker) => {
     if (!editMode) return;
-    e.stopPropagation(); e.preventDefault();
-    const sx = e.clientX, sy = e.clientY, sbx = marker.bendX || 0, sby = marker.bendY || 0;
-    const mm = (me) => setMarkers(prev => prev.map(m => m.id === marker.id ? { ...m, bendX: sbx + me.clientX - sx, bendY: sby + me.clientY - sy } : m));
-    const mu = () => { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu); saveToFile(markers); };
-    document.addEventListener('mousemove', mm); document.addEventListener('mouseup', mu);
+    e.stopPropagation();
+    e.preventDefault();
+
+    const isTouch = e.type === 'touchstart';
+    const sx = isTouch ? e.touches[0].clientX : e.clientX;
+    const sy = isTouch ? e.touches[0].clientY : e.clientY;
+    const sbx = marker.bendX || 0, sby = marker.bendY || 0;
+
+    const mm = (me) => {
+      const moveX = me.touches ? me.touches[0].clientX : me.clientX;
+      const moveY = me.touches ? me.touches[0].clientY : me.clientY;
+      setMarkers(prev => prev.map(m => m.id === marker.id ? { ...m, bendX: sbx + moveX - sx, bendY: sby + moveY - sy } : m));
+    };
+
+    const mu = () => {
+      document.removeEventListener('mousemove', mm);
+      document.removeEventListener('mouseup', mu);
+      document.removeEventListener('touchmove', mm);
+      document.removeEventListener('touchend', mu);
+      saveToFile(markers);
+    };
+
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', mu);
+    document.addEventListener('touchmove', mm, { passive: false });
+    document.addEventListener('touchend', mu);
   };
 
   const handleMobileLine = () => {
@@ -402,7 +445,17 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                       <line x1={sx} y1={sy} x2={mx} y2={my} stroke="white" strokeWidth="2" strokeDasharray="6,3" style={{ pointerEvents: 'none' }} />
                       <line x1={mx} y1={my} x2={ex} y2={ey} stroke="white" strokeWidth="2" strokeDasharray="6,3" style={{ pointerEvents: 'none' }} />
                       <circle cx={sx} cy={sy} r="5" fill="white" opacity="0.9" style={{ pointerEvents: 'none' }} />
-                      {editMode && <circle cx={mx} cy={my} r="4" fill="white" stroke="#1a1a2e" strokeWidth="2" style={{ cursor: 'move', pointerEvents: 'auto' }} onMouseDown={(e) => handleBendMouseDown(e, marker)} />}
+                      {editMode && <circle
+                        cx={mx}
+                        cy={my}
+                        r="4"
+                        fill="white"
+                        stroke="#1a1a2e"
+                        strokeWidth="2"
+                        style={{ cursor: 'move', pointerEvents: 'auto' }}
+                        onMouseDown={(e) => handleBendMouseDown(e, marker)}
+                        onTouchStart={(e) => handleBendMouseDown(e, marker)}
+                      />}
                     </g>
                   );
                 })}
@@ -463,8 +516,16 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                           onClick={(e) => { e.stopPropagation(); collapseGroup(key); setExpandedGroup(null); }} title={t('collapse')}><span className="close-icon">✕</span></div>
                       </>
                     ) : (
-                      <div className="marker group-marker" style={{ left: `${gx}%`, top: `${gy}%`, cursor: editMode ? 'move' : 'pointer' }}
-                        onClick={(e) => handleGroupClick(e, key)} onMouseDown={(e) => handleGroupMouseDown(e, key)} title={`${group.length} ${t('groupGrenades')}`}><span className="group-count">{group.length}</span></div>
+                      <div
+                        className="marker group-marker"
+                        style={{ left: `${gx}%`, top: `${gy}%`, cursor: editMode ? 'move' : 'pointer' }}
+                        onClick={(e) => handleGroupClick(e, key)}
+                        onMouseDown={(e) => handleGroupMouseDown(e, key)}
+                        onTouchStart={(e) => handleGroupMouseDown(e, key)}
+                        title={`${group.length} ${t('groupGrenades')}`}
+                      >
+                        <span className="group-count">{group.length}</span>
+                      </div>
                     )}
                   </div>
                 );
