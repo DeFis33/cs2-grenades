@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import Header from '../components/Header';
 import { useLanguage } from '../context/LanguageContext';
 
-const GIST_ID = '6d5d7b6e6ceb19ef25107e465c926d69';
+const GIST_ID = '8f1c7f4ee430dd9bf0c317a782938d5b';
 const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN;
 const MARKERS_URL = `https://api.github.com/gists/${GIST_ID}`;
 
