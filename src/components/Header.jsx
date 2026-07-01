@@ -102,8 +102,7 @@ function Header({ editMode, guideOpen, setGuideOpen, onLogout, onLoginClick }) {
                     <div className="guide-item">Тап по метке - редактировать</div>
                     <div className="guide-item">Зажать метку - перетащить</div>
                     <div className="guide-item">Зажать группу - переместить</div>
-                    <div className="guide-item">Кнопка ───▶ - траектория</div>
-                    <div className="guide-item">Кнопка ✕ - удалить</div>
+                    <div className="guide-item">Кнопка траектория и удалить при нажатии</div>
                     <div className="guide-item">Тап по группе - развернуть</div>
                   </div>
                 </div>
