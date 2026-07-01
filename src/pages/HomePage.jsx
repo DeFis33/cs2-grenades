@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Header from '../components/Header';
@@ -17,7 +17,7 @@ const mapsList = [
 ];
 
 function HomePage({ editMode, onLogout }) {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const [showLogin, setShowLogin] = useState(false);
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState(false);
@@ -38,6 +38,10 @@ function HomePage({ editMode, onLogout }) {
     if (e.key === 'Enter') handleLogin();
   };
 
+  useEffect(() => {
+    document.title = t('homeTitle');
+  }, [lang]);
+  
   return (
     <>
       <Helmet>

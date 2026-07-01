@@ -9,11 +9,6 @@ const maps = [
 const languages = [
   { code: 'en', label: 'EN' },
   { code: 'ru', label: 'RU' },
-  { code: 'es', label: 'ES' },
-  { code: 'de', label: 'DE' },
-  { code: 'fr', label: 'FR' },
-  { code: 'pt', label: 'PT' },
-  { code: 'zh', label: 'ZH' },
 ];
 
 function Header({ editMode, guideOpen, setGuideOpen, onLogout, onLoginClick }) {

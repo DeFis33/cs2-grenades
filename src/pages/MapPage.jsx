@@ -52,7 +52,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   const [expandedGroup, setExpandedGroup] = useState(null);
   const [guideOpen, setGuideOpen] = useState(false);
   const mapRef = useRef(null);
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
 
   const imageName = `${selectedMap}.png`;
 
@@ -85,6 +85,10 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
     document.addEventListener('click', handleClick);
     return () => document.removeEventListener('click', handleClick);
   }, []);
+
+  useEffect(() => {
+    document.title = `${t('mapTitle')} - ${maps.find(m => m.id === selectedMap)?.name || ''}`;
+  }, [selectedMap, lang]);
 
   const saveToFile = useCallback(async (data) => {
     try {
