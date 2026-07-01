@@ -58,7 +58,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
 
   const imageName = `${selectedMap}.png`;
 
-  const getSpacing = () => window.innerWidth <= 768 ? 6 : 4;
+  const getSpacing = () => window.innerWidth <= 768 ? 6 : 5;
 
   useEffect(() => {
     fetch(MARKERS_URL)
@@ -144,7 +144,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   const updateMarkers = (newMarkers) => { setMarkers(newMarkers); saveToFile(newMarkers); };
 
   const recalculateGroup = (markersArray, groupX, groupY, mapId) => {
-    const spacing = getSpacing();
+    const spacing = getSpacing(); // Убрал * 2
     const groupMembers = markersArray
       .filter(m => m.mapId === mapId && Math.abs(m.x - groupX) < 1.5 && Math.abs(m.y - groupY) < 1.5)
       .sort((a, b) => a.id - b.id);
