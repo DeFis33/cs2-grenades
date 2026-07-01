@@ -247,8 +247,9 @@ body {
   flex: 1;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start; /* Меняем center на flex-start */
   padding: 20px;
+  padding-top: 30px; /* Добавляем отступ сверху */
   overflow: auto;
 }
 
@@ -913,7 +914,7 @@ kbd {
 
 .gallery-image {
   width: 100%;
-  height: 100px;
+  height: 150px; /* Увеличил с 100px до 150px */
   object-fit: cover;
   display: block;
   cursor: pointer;
@@ -1160,4 +1161,27 @@ ul, li {
   .granade-option:hover { transform: none; }
   .guide-container:hover .guide-dropdown { display: none; }
   .guide-container.active .guide-dropdown { display: block; }
+}
+
+@media (max-width: 768px) {
+  .main { 
+    padding: 8px; 
+    padding-top: 20px;
+    align-items: flex-start; 
+  }
+  
+  .gallery-image {
+    height: 120px; /* Чуть меньше чем на десктопе */
+  }
+}
+
+@media (max-width: 480px) {
+  .main { 
+    padding: 6px; 
+    padding-top: 16px;
+  }
+  
+  .gallery-image {
+    height: 100px;
+  }
 }
