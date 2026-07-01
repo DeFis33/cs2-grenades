@@ -56,6 +56,8 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
 
   const imageName = `${selectedMap}.png`;
 
+  const getSpacing = () => window.innerWidth <= 768 ? 6 : 4;
+
   useEffect(() => {
     fetch(MARKERS_URL)
       .then(res => res.json())
@@ -114,6 +116,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   const updateMarkers = (newMarkers) => { setMarkers(newMarkers); saveToFile(newMarkers); };
 
   const recalculateGroup = (markersArray, groupX, groupY, mapId) => {
+    const spacing = getSpacing();
     const groupMembers = markersArray
       .filter(m => m.mapId === mapId && Math.abs(m.x - groupX) < 1.5 && Math.abs(m.y - groupY) < 1.5)
       .sort((a, b) => a.id - b.id);
@@ -121,7 +124,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
     return markersArray.map(m => {
       const idx = groupMembers.findIndex(gm => gm.id === m.id);
       if (idx !== -1) {
-        return { ...m, displayX: groupX + idx * 6, displayY: groupY };
+        return { ...m, displayX: groupX + idx * spacing, displayY: groupY };
       }
       return m;
     });
@@ -209,12 +212,12 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
 
   const handleMarkerMouseDown = (e, marker) => {
     if (!editMode) return;
-    const isTouch = e.type === 'touchstart';
     e.preventDefault();
     e.stopPropagation();
 
     setWasDragging(false);
 
+    const isTouch = e.type === 'touchstart';
     const clientX = isTouch ? e.touches[0].clientX : e.clientX;
     const clientY = isTouch ? e.touches[0].clientY : e.clientY;
 
@@ -293,10 +296,10 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
 
   const handleGroupMouseDown = (e, groupKey) => {
     if (!editMode) return;
-    e.stopPropagation();
 
     const isTouch = e.type === 'touchstart';
-    if (isTouch) e.preventDefault();
+    e.stopPropagation();
+    e.preventDefault();
 
     const clientX = isTouch ? e.touches[0].clientX : e.clientX;
     const clientY = isTouch ? e.touches[0].clientY : e.clientY;
@@ -323,7 +326,15 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
       document.removeEventListener('mouseup', mu);
       document.removeEventListener('touchmove', mm);
       document.removeEventListener('touchend', mu);
-      saveToFile(markers);
+
+      setMarkers(prev => {
+        const first = prev.find(m => m.mapId === selectedMap && Math.abs(m.x - gx) < 3 && Math.abs(m.y - gy) < 3);
+        const newGx = first?.x || gx;
+        const newGy = first?.y || gy;
+        const updated = recalculateGroup(prev, newGx, newGy, selectedMap);
+        saveToFile(updated);
+        return updated;
+      });
     };
 
     document.addEventListener('mousemove', mm);
@@ -515,7 +526,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                             </div>
                           );
                         })}
-                        <div className="marker group-close-marker" style={{ left: `${gx + group.length * 6}%`, top: `${gy}%` }}
+                        <div className="marker group-close-marker" style={{ left: `${gx + group.length * getSpacing()}%`, top: `${gy}%` }}
                           onClick={(e) => { e.stopPropagation(); collapseGroup(key); setExpandedGroup(null); }} title={t('collapse')}><span className="close-icon">✕</span></div>
                       </>
                     ) : (
