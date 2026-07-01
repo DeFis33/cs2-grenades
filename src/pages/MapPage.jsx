@@ -665,21 +665,41 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                     {/* Блок изображений */}
                     <div className="images-block">
                       <p className="throw-type-label">Изображения:</p>
+
+                      {/* Вставка ссылкой */}
+                      <input
+                        type="text"
+                        className="video-url-input"
+                        placeholder="Ссылка на изображение (Cloudinary)"
+                        style={{ marginBottom: '8px' }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && e.target.value) {
+                            const updatedMarker = {
+                              ...sidePanel.marker,
+                              images: [...(sidePanel.marker.images || []), e.target.value]
+                            };
+                            updateMarkers(markers.map(m =>
+                              m.id === sidePanel.marker.id ? updatedMarker : m
+                            ));
+                            setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+
+                      {/* Загрузка файла */}
                       <div className="image-upload">
                         <input
                           type="file"
                           accept="image/*"
-                          onChange={async (e) => {
+                          onChange={(e) => {
                             const file = e.target.files[0];
                             if (!file) return;
-
-                            // Сохраняем оригинал без сжатия
                             const reader = new FileReader();
                             reader.onload = (event) => {
-                              const imageUrl = event.target.result;
                               const updatedMarker = {
                                 ...sidePanel.marker,
-                                images: [...(sidePanel.marker.images || []), imageUrl]
+                                images: [...(sidePanel.marker.images || []), event.target.result]
                               };
                               updateMarkers(markers.map(m =>
                                 m.id === sidePanel.marker.id ? updatedMarker : m
@@ -690,8 +710,10 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                           }}
                           className="image-input"
                         />
-                        <span className="image-upload-hint">Загрузить изображение</span>
+                        <span className="image-upload-hint">Загрузить файл</span>
                       </div>
+
+                      {/* Галерея */}
                       {sidePanel.marker.images && sidePanel.marker.images.length > 0 && (
                         <div className="images-gallery">
                           {sidePanel.marker.images.map((img, index) => (
