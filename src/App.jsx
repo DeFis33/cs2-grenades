@@ -6,8 +6,13 @@ import HomePage from './pages/HomePage';
 import MapPage from './pages/MapPage';
 import './App.css';
 
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
+
 function App() {
-  const [editMode, setEditMode] = useState(() => localStorage.getItem('cs2_editor_auth') === 'true');
+  const [editMode, setEditMode] = useState(() => {
+    const savedPassword = localStorage.getItem('cs2_editor_auth');
+    return savedPassword === ADMIN_PASSWORD;
+  });
 
   const handleLogout = () => {
     setEditMode(false);
@@ -16,7 +21,7 @@ function App() {
 
   const handleLoginSuccess = () => {
     setEditMode(true);
-    localStorage.setItem('cs2_editor_auth', 'true');
+    localStorage.setItem('cs2_editor_auth', ADMIN_PASSWORD);
   };
 
   return (

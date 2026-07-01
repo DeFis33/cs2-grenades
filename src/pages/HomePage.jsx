@@ -24,7 +24,7 @@ function HomePage({ editMode, onLogout }) {
 
   const handleLogin = () => {
     if (password === ADMIN_PASSWORD) {
-      localStorage.setItem('cs2_editor_auth', 'true');
+      localStorage.setItem('cs2_editor_auth', password); // Сохраняем сам пароль
       setShowLogin(false);
       setPassword('');
       setLoginError(false);
@@ -41,7 +41,7 @@ function HomePage({ editMode, onLogout }) {
   useEffect(() => {
     document.title = t('homeTitle');
   }, [lang]);
-  
+
   return (
     <>
       <Helmet>
