@@ -51,6 +51,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   const [hoveredMarker, setHoveredMarker] = useState(null);
   const [expandedGroup, setExpandedGroup] = useState(null);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [fullscreenImage, setFullscreenImage] = useState(null);
   const mapRef = useRef(null);
   const { lang, t } = useLanguage();
 
@@ -75,7 +76,6 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
           let bendAbsoluteX = m.bendAbsoluteX;
           let bendAbsoluteY = m.bendAbsoluteY;
 
-          // Если нет абсолютных координат, но есть линия и старые bend
           if ((bendAbsoluteX === undefined || bendAbsoluteX === null) && hasLineTo) {
             const sx = m.lineTo.x * 8;
             const sy = m.lineTo.y * 6;
@@ -100,6 +100,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
             throwType: m.throwType || '',
             videoUrl: m.videoUrl || '',
             side: m.side || '',
+            images: m.images || [],
           };
         });
         setMarkers(fixed);
@@ -208,22 +209,23 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   const handleSelectGranade = (type, e) => {
     if (!granadeMenu) return;
     e.stopPropagation();
-    const newMarker = {
-      id: Date.now(),
-      mapId: selectedMap,
-      x: granadeMenu.x,
-      y: granadeMenu.y,
-      displayX: granadeMenu.x,
-      displayY: granadeMenu.y,
-      type,
-      videoUrl: '',
-      lineTo: null,
-      bendX: 0,
-      bendY: 0,
-      bendAbsoluteX: 0,
-      bendAbsoluteY: 0,
-      throwType: '',
-      side: ''
+    const newMarker = { 
+      id: Date.now(), 
+      mapId: selectedMap, 
+      x: granadeMenu.x, 
+      y: granadeMenu.y, 
+      displayX: granadeMenu.x, 
+      displayY: granadeMenu.y, 
+      type, 
+      videoUrl: '', 
+      lineTo: null, 
+      bendX: 0, 
+      bendY: 0, 
+      bendAbsoluteX: 0, 
+      bendAbsoluteY: 0, 
+      throwType: '', 
+      side: '',
+      images: [],
     };
     const updated = recalculateGroup([...markers, newMarker], granadeMenu.x, granadeMenu.y, selectedMap);
     updateMarkers(updated);
@@ -249,7 +251,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
     if (editMode && e.ctrlKey) { setGranadeMenu({ x: marker.x, y: marker.y }); setSidePanel(null); setDrawingLine(null); return; }
     if (editMode && e.shiftKey) { setDrawingLine({ markerId: marker.id, fromX: marker.x, fromY: marker.y }); setSidePanel(null); setExpandedGroup(null); return; }
     if (editMode) setSidePanel({ marker, mode: 'edit' });
-    else if (marker.videoUrl) setSidePanel({ marker, mode: 'view' });
+    else if (marker.videoUrl || (marker.images && marker.images.length > 0) || marker.throwType || marker.side) setSidePanel({ marker, mode: 'view' });
   };
 
   const handleMarkerMouseDown = (e, marker) => {
@@ -378,7 +380,6 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
           y: Math.round((o.y + dy) * 100) / 100,
           displayX: o.displayX + dx,
           displayY: o.displayY + dy
-          // lineTo, bendX, bendY не трогаем
         };
       }));
     };
@@ -423,28 +424,25 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
     e.preventDefault();
 
     const svgElement = document.querySelector('.lines-svg');
+    if (!svgElement) return;
+    
     const svgRect = svgElement.getBoundingClientRect();
-
-    let currentMarkers = [...markers];
+    if (svgRect.width === 0 || svgRect.height === 0) return;
 
     const mm = (me) => {
       const moveX = me.touches ? me.touches[0].clientX : me.clientX;
       const moveY = me.touches ? me.touches[0].clientY : me.clientY;
 
-      // Абсолютная позиция в SVG
       const newMx = ((moveX - svgRect.left) / svgRect.width) * 800;
       const newMy = ((moveY - svgRect.top) / svgRect.height) * 600;
 
-      setMarkers(prev => {
-        currentMarkers = prev.map(m =>
-          m.id === marker.id ? {
-            ...m,
-            bendAbsoluteX: newMx,
-            bendAbsoluteY: newMy
-          } : m
-        );
-        return currentMarkers;
-      });
+      setMarkers(prev => prev.map(m =>
+        m.id === marker.id ? {
+          ...m,
+          bendAbsoluteX: newMx,
+          bendAbsoluteY: newMy
+        } : m
+      ));
     };
 
     const mu = () => {
@@ -452,7 +450,11 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
       document.removeEventListener('mouseup', mu);
       document.removeEventListener('touchmove', mm);
       document.removeEventListener('touchend', mu);
-      saveToFile(currentMarkers);
+      
+      setMarkers(prev => {
+        saveToFile(prev);
+        return prev;
+      });
     };
 
     document.addEventListener('mousemove', mm);
@@ -537,16 +539,14 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                   const sx = marker.lineTo.x * 8;
                   const sy = marker.lineTo.y * 6;
 
-                  // Вычисляем середину
                   const midX = (sx + ex) / 2;
                   const midY = (sy + ey) / 2;
 
-                  // Используем абсолютные координаты если есть, иначе старый bend
-                  const mx = (marker.bendAbsoluteX != null && marker.bendAbsoluteX !== 0)
-                    ? marker.bendAbsoluteX
+                  const mx = (marker.bendAbsoluteX != null && marker.bendAbsoluteX !== 0) 
+                    ? marker.bendAbsoluteX 
                     : midX + (marker.bendX || 0);
-                  const my = (marker.bendAbsoluteY != null && marker.bendAbsoluteY !== 0)
-                    ? marker.bendAbsoluteY
+                  const my = (marker.bendAbsoluteY != null && marker.bendAbsoluteY !== 0) 
+                    ? marker.bendAbsoluteY 
                     : midY + (marker.bendY || 0);
 
                   return (
@@ -661,6 +661,59 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                     ) : (
                       <div className="video-url-block"><input type="text" className="video-url-input" placeholder={t('videoPlaceholder')} value={sidePanel.marker.videoUrl || ''} onChange={(e) => { updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, videoUrl: e.target.value } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, videoUrl: e.target.value } })); }} /></div>
                     )}
+                    
+                    {/* Блок изображений */}
+                    <div className="images-block">
+                      <p className="throw-type-label">Изображения:</p>
+                      <div className="image-upload">
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              const imageUrl = event.target.result;
+                              const updatedMarker = {
+                                ...sidePanel.marker,
+                                images: [...(sidePanel.marker.images || []), imageUrl]
+                              };
+                              updateMarkers(markers.map(m => 
+                                m.id === sidePanel.marker.id ? updatedMarker : m
+                              ));
+                              setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
+                            };
+                            reader.readAsDataURL(file);
+                          }}
+                          className="image-input"
+                        />
+                        <span className="image-upload-hint">Загрузить изображение</span>
+                      </div>
+                      {sidePanel.marker.images && sidePanel.marker.images.length > 0 && (
+                        <div className="images-gallery">
+                          {sidePanel.marker.images.map((img, index) => (
+                            <div key={index} className="image-item">
+                              <img src={img} alt={`Скриншот ${index + 1}`} className="gallery-image" onClick={() => setFullscreenImage(img)} />
+                              <button 
+                                className="image-delete-btn"
+                                onClick={() => {
+                                  const updatedImages = sidePanel.marker.images.filter((_, i) => i !== index);
+                                  const updatedMarker = { ...sidePanel.marker, images: updatedImages };
+                                  updateMarkers(markers.map(m => 
+                                    m.id === sidePanel.marker.id ? updatedMarker : m
+                                  ));
+                                  setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="throw-type-block">
                       <p className="throw-type-label">{t('throwType')}</p>
                       <select className="throw-type-select" value={sidePanel.marker.throwType || ''} onChange={(e) => handleThrowTypeChange(e.target.value)}>{throwTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
@@ -675,6 +728,18 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                 ) : (
                   <>
                     <div className="video-container">{sidePanel.marker.videoUrl ? <video src={sidePanel.marker.videoUrl} controls className="side-video" /> : <p className="no-video">{t('noVideo')}</p>}</div>
+                    
+                    {/* Изображения в режиме просмотра */}
+                    {sidePanel.marker.images && sidePanel.marker.images.length > 0 && (
+                      <div className="images-gallery">
+                        {sidePanel.marker.images.map((img, index) => (
+                          <div key={index} className="image-item">
+                            <img src={img} alt={`Скриншот ${index + 1}`} className="gallery-image" onClick={() => setFullscreenImage(img)} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
                     {sidePanel.marker.throwType && <div className="throw-type-display">{t('throwType')} {throwTypes.find(t => t.value === sidePanel.marker.throwType)?.label}</div>}
                     {sidePanel.marker.side && <div className="side-display"><span className="side-display-label">{t('side')}</span><img src={sideTypes.find(s => s.value === sidePanel.marker.side)?.icon} alt="" className="side-display-icon" /></div>}
                   </>
@@ -683,6 +748,25 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
             )}
           </div>
         )}
+        
+        {/* Модальное окно для просмотра изображения */}
+        {fullscreenImage && (
+          <div className="modal-overlay" onClick={() => setFullscreenImage(null)}>
+            <img 
+              src={fullscreenImage} 
+              alt="Полный размер" 
+              className="fullscreen-image"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button 
+              className="fullscreen-close"
+              onClick={() => setFullscreenImage(null)}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        
         {editMode && sidePanel?.marker && (
           <div className="mobile-tools">
             <button
