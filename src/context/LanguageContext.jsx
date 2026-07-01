@@ -33,6 +33,8 @@ const translations = {
     guideDrag: 'Перетащить метку на другую - в группу',
     homeTitle: 'CS Lineups - Выберите карту',
     mapTitle: 'CS Lineups',
+    guideMobileGroupDrag: 'Зажать группу - переместить',
+    guideMobileTrajectory: 'Кнопка траектория и удалить при нажатии',
   },
   en: {
     maps: 'Maps',
@@ -66,6 +68,8 @@ const translations = {
     guideDrag: 'Drag marker onto another - group',
     homeTitle: 'CS Lineups - Select map',
     mapTitle: 'CS Lineups',
+    guideMobileGroupDrag: 'Hold group - move',
+    guideMobileTrajectory: 'Trajectory and delete buttons on tap',
   },
 };
 

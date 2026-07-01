@@ -98,12 +98,12 @@ function Header({ editMode, guideOpen, setGuideOpen, onLogout, onLoginClick }) {
                     <div className="guide-item">{t('guideDrag')}</div>
                   </div>
                   <div className="guide-mobile">
-                    <div className="guide-item">Тап по карте - создать гранату</div>
-                    <div className="guide-item">Тап по метке - редактировать</div>
-                    <div className="guide-item">Зажать метку - перетащить</div>
-                    <div className="guide-item">Зажать группу - переместить</div>
-                    <div className="guide-item">Кнопка траектория и удалить при нажатии</div>
-                    <div className="guide-item">Тап по группе - развернуть</div>
+                    <div className="guide-item">{t('guideClickMap')}</div>
+                    <div className="guide-item">{t('guideClickMarker')}</div>
+                    <div className="guide-item">{t('guideDrag')}</div>
+                    <div className="guide-item">{t('guideMobileGroupDrag')}</div>
+                    <div className="guide-item">{t('guideMobileTrajectory')}</div>
+                    <div className="guide-item">{t('guideGroupClick')}</div>
                   </div>
                 </div>
               </div>
