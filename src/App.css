@@ -495,7 +495,7 @@ body {
   z-index: 1000;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 40px; /* Отступы чтобы картинка не прилипала к краям */
+  padding: 20px;
 }
 
 /* SVG линии */
@@ -957,20 +957,12 @@ kbd {
 .fullscreen-image {
   display: block;
   max-width: 90vw;
-  max-height: 90vh;
+  max-height: none;
   width: auto;
   height: auto;
   object-fit: contain;
   border-radius: 12px;
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
-}
-
-/* На ПК - больше размер */
-@media (min-width: 769px) {
-  .fullscreen-image {
-    max-width: none;
-    max-height: 150vh;
-  }
 }
 
 .fullscreen-close {
