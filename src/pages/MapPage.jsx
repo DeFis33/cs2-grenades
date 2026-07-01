@@ -209,21 +209,21 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   const handleSelectGranade = (type, e) => {
     if (!granadeMenu) return;
     e.stopPropagation();
-    const newMarker = { 
-      id: Date.now(), 
-      mapId: selectedMap, 
-      x: granadeMenu.x, 
-      y: granadeMenu.y, 
-      displayX: granadeMenu.x, 
-      displayY: granadeMenu.y, 
-      type, 
-      videoUrl: '', 
-      lineTo: null, 
-      bendX: 0, 
-      bendY: 0, 
-      bendAbsoluteX: 0, 
-      bendAbsoluteY: 0, 
-      throwType: '', 
+    const newMarker = {
+      id: Date.now(),
+      mapId: selectedMap,
+      x: granadeMenu.x,
+      y: granadeMenu.y,
+      displayX: granadeMenu.x,
+      displayY: granadeMenu.y,
+      type,
+      videoUrl: '',
+      lineTo: null,
+      bendX: 0,
+      bendY: 0,
+      bendAbsoluteX: 0,
+      bendAbsoluteY: 0,
+      throwType: '',
       side: '',
       images: [],
     };
@@ -425,7 +425,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
 
     const svgElement = document.querySelector('.lines-svg');
     if (!svgElement) return;
-    
+
     const svgRect = svgElement.getBoundingClientRect();
     if (svgRect.width === 0 || svgRect.height === 0) return;
 
@@ -450,7 +450,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
       document.removeEventListener('mouseup', mu);
       document.removeEventListener('touchmove', mm);
       document.removeEventListener('touchend', mu);
-      
+
       setMarkers(prev => {
         saveToFile(prev);
         return prev;
@@ -542,11 +542,11 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                   const midX = (sx + ex) / 2;
                   const midY = (sy + ey) / 2;
 
-                  const mx = (marker.bendAbsoluteX != null && marker.bendAbsoluteX !== 0) 
-                    ? marker.bendAbsoluteX 
+                  const mx = (marker.bendAbsoluteX != null && marker.bendAbsoluteX !== 0)
+                    ? marker.bendAbsoluteX
                     : midX + (marker.bendX || 0);
-                  const my = (marker.bendAbsoluteY != null && marker.bendAbsoluteY !== 0) 
-                    ? marker.bendAbsoluteY 
+                  const my = (marker.bendAbsoluteY != null && marker.bendAbsoluteY !== 0)
+                    ? marker.bendAbsoluteY
                     : midY + (marker.bendY || 0);
 
                   return (
@@ -661,30 +661,60 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                     ) : (
                       <div className="video-url-block"><input type="text" className="video-url-input" placeholder={t('videoPlaceholder')} value={sidePanel.marker.videoUrl || ''} onChange={(e) => { updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, videoUrl: e.target.value } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, videoUrl: e.target.value } })); }} /></div>
                     )}
-                    
+
                     {/* Блок изображений */}
                     <div className="images-block">
                       <p className="throw-type-label">Изображения:</p>
                       <div className="image-upload">
-                        <input 
-                          type="file" 
-                          accept="image/*" 
+                        <input
+                          type="file"
+                          accept="image/*"
                           onChange={async (e) => {
                             const file = e.target.files[0];
                             if (!file) return;
-                            const reader = new FileReader();
-                            reader.onload = (event) => {
-                              const imageUrl = event.target.result;
-                              const updatedMarker = {
-                                ...sidePanel.marker,
-                                images: [...(sidePanel.marker.images || []), imageUrl]
-                              };
-                              updateMarkers(markers.map(m => 
-                                m.id === sidePanel.marker.id ? updatedMarker : m
-                              ));
-                              setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
+
+                            // Сжимаем изображение перед сохранением
+                            const compressImage = (file, maxWidth = 800, quality = 0.6) => {
+                              return new Promise((resolve) => {
+                                const reader = new FileReader();
+                                reader.onload = (event) => {
+                                  const img = new Image();
+                                  img.onload = () => {
+                                    const canvas = document.createElement('canvas');
+                                    let width = img.width;
+                                    let height = img.height;
+
+                                    // Масштабируем если больше maxWidth
+                                    if (width > maxWidth) {
+                                      height = (height * maxWidth) / width;
+                                      width = maxWidth;
+                                    }
+
+                                    canvas.width = width;
+                                    canvas.height = height;
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.drawImage(img, 0, 0, width, height);
+
+                                    // Конвертируем в JPEG с качеством 60%
+                                    const compressedUrl = canvas.toDataURL('image/jpeg', quality);
+                                    resolve(compressedUrl);
+                                  };
+                                  img.src = event.target.result;
+                                };
+                                reader.readAsDataURL(file);
+                              });
                             };
-                            reader.readAsDataURL(file);
+
+                            const compressedImage = await compressImage(file);
+
+                            const updatedMarker = {
+                              ...sidePanel.marker,
+                              images: [...(sidePanel.marker.images || []), compressedImage]
+                            };
+                            updateMarkers(markers.map(m =>
+                              m.id === sidePanel.marker.id ? updatedMarker : m
+                            ));
+                            setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
                           }}
                           className="image-input"
                         />
@@ -695,12 +725,12 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                           {sidePanel.marker.images.map((img, index) => (
                             <div key={index} className="image-item">
                               <img src={img} alt={`Скриншот ${index + 1}`} className="gallery-image" onClick={() => setFullscreenImage(img)} />
-                              <button 
+                              <button
                                 className="image-delete-btn"
                                 onClick={() => {
                                   const updatedImages = sidePanel.marker.images.filter((_, i) => i !== index);
                                   const updatedMarker = { ...sidePanel.marker, images: updatedImages };
-                                  updateMarkers(markers.map(m => 
+                                  updateMarkers(markers.map(m =>
                                     m.id === sidePanel.marker.id ? updatedMarker : m
                                   ));
                                   setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
@@ -728,7 +758,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                 ) : (
                   <>
                     <div className="video-container">{sidePanel.marker.videoUrl ? <video src={sidePanel.marker.videoUrl} controls className="side-video" /> : <p className="no-video">{t('noVideo')}</p>}</div>
-                    
+
                     {/* Изображения в режиме просмотра */}
                     {sidePanel.marker.images && sidePanel.marker.images.length > 0 && (
                       <div className="images-gallery">
@@ -739,7 +769,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                         ))}
                       </div>
                     )}
-                    
+
                     {sidePanel.marker.throwType && <div className="throw-type-display">{t('throwType')} {throwTypes.find(t => t.value === sidePanel.marker.throwType)?.label}</div>}
                     {sidePanel.marker.side && <div className="side-display"><span className="side-display-label">{t('side')}</span><img src={sideTypes.find(s => s.value === sidePanel.marker.side)?.icon} alt="" className="side-display-icon" /></div>}
                   </>
@@ -748,17 +778,17 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
             )}
           </div>
         )}
-        
+
         {/* Модальное окно для просмотра изображения */}
         {fullscreenImage && (
           <div className="modal-overlay" onClick={() => setFullscreenImage(null)}>
-            <img 
-              src={fullscreenImage} 
-              alt="Полный размер" 
+            <img
+              src={fullscreenImage}
+              alt="Полный размер"
               className="fullscreen-image"
               onClick={(e) => e.stopPropagation()}
             />
-            <button 
+            <button
               className="fullscreen-close"
               onClick={() => setFullscreenImage(null)}
             >
@@ -766,7 +796,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
             </button>
           </div>
         )}
-        
+
         {editMode && sidePanel?.marker && (
           <div className="mobile-tools">
             <button
