@@ -87,7 +87,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   }, []);
 
   useEffect(() => {
-    document.title = `${t('mapTitle')} — ${maps.find(m => m.id === selectedMap)?.name || ''}`;
+    document.title = `${t('mapTitle')} - ${maps.find(m => m.id === selectedMap)?.name || ''}`;
   }, [selectedMap, lang, t]);
 
   const saveToFile = useCallback(async (data) => {
@@ -322,6 +322,12 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
     document.addEventListener('mousemove', mm); document.addEventListener('mouseup', mu);
   };
 
+  const handleMobileLine = () => {
+    if (!sidePanel?.marker) return;
+    setDrawingLine({ markerId: sidePanel.marker.id, fromX: sidePanel.marker.x, fromY: sidePanel.marker.y });
+    setGranadeMenu(null);
+  };
+
   const handleThrowTypeChange = (v) => { if (!sidePanel) return; updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, throwType: v } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, throwType: v } })); };
   const handleSideChange = (v) => { if (!sidePanel) return; updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, side: v } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, side: v } })); };
   const handleDeleteLine = () => { if (!sidePanel) return; updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, lineTo: null, bendX: 0, bendY: 0 } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, lineTo: null } })); };
@@ -503,6 +509,11 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                 )}
               </div>
             )}
+          </div>
+        )}
+        {editMode && drawingLine && (
+          <div className="mobile-line-hint" onClick={() => setDrawingLine(null)}>
+            {t('shiftHint')}
           </div>
         )}
       </main>
