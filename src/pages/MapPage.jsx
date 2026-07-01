@@ -596,7 +596,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
               }}
               title={t('guideShiftMarker')}
             >
-              <img src="/icons/trajectory.svg" alt="Line" className="mobile-tool-icon" />
+              <img src="/icons/trajectory.png" alt="Line" className="mobile-tool-icon" />
             </button>
             <button
               className="mobile-tool-btn"
@@ -605,7 +605,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
               }}
               title={t('guideRightClick')}
             >
-              <img src="/icons/delete.svg" alt="Delete" className="mobile-tool-icon" />
+              <img src="/icons/delete.png" alt="Delete" className="mobile-tool-icon" />
             </button>
           </div>
         )}
