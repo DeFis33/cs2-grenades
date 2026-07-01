@@ -673,48 +673,20 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                             const file = e.target.files[0];
                             if (!file) return;
 
-                            // Сжимаем изображение перед сохранением
-                            const compressImage = (file, maxWidth = 800, quality = 0.6) => {
-                              return new Promise((resolve) => {
-                                const reader = new FileReader();
-                                reader.onload = (event) => {
-                                  const img = new Image();
-                                  img.onload = () => {
-                                    const canvas = document.createElement('canvas');
-                                    let width = img.width;
-                                    let height = img.height;
-
-                                    // Масштабируем если больше maxWidth
-                                    if (width > maxWidth) {
-                                      height = (height * maxWidth) / width;
-                                      width = maxWidth;
-                                    }
-
-                                    canvas.width = width;
-                                    canvas.height = height;
-                                    const ctx = canvas.getContext('2d');
-                                    ctx.drawImage(img, 0, 0, width, height);
-
-                                    // Конвертируем в JPEG с качеством 60%
-                                    const compressedUrl = canvas.toDataURL('image/jpeg', quality);
-                                    resolve(compressedUrl);
-                                  };
-                                  img.src = event.target.result;
-                                };
-                                reader.readAsDataURL(file);
-                              });
+                            // Сохраняем оригинал без сжатия
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              const imageUrl = event.target.result;
+                              const updatedMarker = {
+                                ...sidePanel.marker,
+                                images: [...(sidePanel.marker.images || []), imageUrl]
+                              };
+                              updateMarkers(markers.map(m =>
+                                m.id === sidePanel.marker.id ? updatedMarker : m
+                              ));
+                              setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
                             };
-
-                            const compressedImage = await compressImage(file);
-
-                            const updatedMarker = {
-                              ...sidePanel.marker,
-                              images: [...(sidePanel.marker.images || []), compressedImage]
-                            };
-                            updateMarkers(markers.map(m =>
-                              m.id === sidePanel.marker.id ? updatedMarker : m
-                            ));
-                            setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
+                            reader.readAsDataURL(file);
                           }}
                           className="image-input"
                         />
