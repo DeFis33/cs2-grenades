@@ -788,12 +788,6 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
               className="fullscreen-image"
               onClick={(e) => e.stopPropagation()}
             />
-            <button
-              className="fullscreen-close"
-              onClick={() => setFullscreenImage(null)}
-            >
-              ✕
-            </button>
           </div>
         )}
 
