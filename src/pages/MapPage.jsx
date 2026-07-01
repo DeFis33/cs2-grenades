@@ -157,7 +157,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
     if (!editMode || !selectedMap) return;
     if (e.target.closest('circle')) return;
 
-    if (e.shiftKey && drawingLine) {
+    if (drawingLine) {
       e.stopPropagation();
       const rect = e.currentTarget.getBoundingClientRect();
       const toX = ((e.clientX - rect.left) / rect.width) * 100;
@@ -511,39 +511,25 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
             )}
           </div>
         )}
-        {editMode && (
+        {editMode && sidePanel?.marker && (
           <div className="mobile-tools">
             <button
               className="mobile-tool-btn"
               onClick={() => {
-                if (expandedGroup) { collapseGroup(expandedGroup); setExpandedGroup(null); }
-                setGranadeMenu(null);
-                setGranadeMenu({ x: 50, y: 50 });
+                setDrawingLine({ markerId: sidePanel.marker.id, fromX: sidePanel.marker.x, fromY: sidePanel.marker.y });
+                setSidePanel(null);
               }}
             >
-              +
+              ───▶
             </button>
-            {sidePanel?.marker && (
-              <>
-                <button
-                  className="mobile-tool-btn"
-                  onClick={() => {
-                    setDrawingLine({ markerId: sidePanel.marker.id, fromX: sidePanel.marker.x, fromY: sidePanel.marker.y });
-                    setSidePanel(null);
-                  }}
-                >
-                  ───▶
-                </button>
-                <button
-                  className="mobile-tool-btn"
-                  onClick={() => {
-                    handleMarkerRightClick(new MouseEvent('click'), sidePanel.marker.id);
-                  }}
-                >
-                  ✕
-                </button>
-              </>
-            )}
+            <button
+              className="mobile-tool-btn"
+              onClick={() => {
+                handleMarkerRightClick(new MouseEvent('click'), sidePanel.marker.id);
+              }}
+            >
+              ✕
+            </button>
           </div>
         )}
       </main>

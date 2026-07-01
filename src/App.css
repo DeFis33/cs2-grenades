@@ -991,3 +991,24 @@ ul, li {
     line-height: 2.5;
   }
 }
+
+.side-panel .throw-type-select,
+.side-panel .video-url-input {
+  padding: 14px 16px;
+  font-size: 16px;
+}
+
+.side-panel .throw-type-label {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.side-panel .side-btn {
+  width: 52px;
+  height: 52px;
+}
+
+.side-panel .delete-line-btn {
+  padding: 12px 18px;
+  font-size: 15px;
+}
