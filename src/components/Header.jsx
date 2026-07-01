@@ -87,14 +87,25 @@ function Header({ editMode, guideOpen, setGuideOpen, onLogout, onLoginClick }) {
               <div className="guide-dropdown" onClick={(e) => e.stopPropagation()}>
                 <div className="guide-dropdown-inner">
                   <div className="guide-title">{t('guide')}</div>
-                  <div className="guide-item"><kbd>LMB</kbd> - {t('guideClickMap')}</div>
-                  <div className="guide-item"><kbd>LMB</kbd> - {t('guideClickMarker')}</div>
-                  <div className="guide-item"><kbd>Ctrl</kbd> + <kbd>LMB</kbd> - {t('guideCtrl')}</div>
-                  <div className="guide-item"><kbd>Shift</kbd> + <kbd>LMB</kbd> - {t('guideShiftMarker')}</div>
-                  <div className="guide-item"><kbd>Shift</kbd> + <kbd>LMB</kbd> - {t('guideShiftMap')}</div>
-                  <div className="guide-item"><kbd>RMB</kbd> - {t('guideRightClick')}</div>
-                  <div className="guide-item"><kbd>LMB</kbd> - {t('guideGroupClick')}</div>
-                  <div className="guide-item">{t('guideDrag')}</div>
+                  <div className="guide-desktop">
+                    <div className="guide-item"><kbd>LMB</kbd> - {t('guideClickMap')}</div>
+                    <div className="guide-item"><kbd>LMB</kbd> - {t('guideClickMarker')}</div>
+                    <div className="guide-item"><kbd>Ctrl</kbd> + <kbd>LMB</kbd> - {t('guideCtrl')}</div>
+                    <div className="guide-item"><kbd>Shift</kbd> + <kbd>LMB</kbd> - {t('guideShiftMarker')}</div>
+                    <div className="guide-item"><kbd>Shift</kbd> + <kbd>LMB</kbd> - {t('guideShiftMap')}</div>
+                    <div className="guide-item"><kbd>RMB</kbd> - {t('guideRightClick')}</div>
+                    <div className="guide-item"><kbd>LMB</kbd> - {t('guideGroupClick')}</div>
+                    <div className="guide-item">{t('guideDrag')}</div>
+                  </div>
+                  <div className="guide-mobile">
+                    <div className="guide-item">Тап по карте - создать гранату</div>
+                    <div className="guide-item">Тап по метке - редактировать</div>
+                    <div className="guide-item">Зажать метку - перетащить</div>
+                    <div className="guide-item">Зажать группу - переместить</div>
+                    <div className="guide-item">Кнопка ───▶ - траектория</div>
+                    <div className="guide-item">Кнопка ✕ - удалить</div>
+                    <div className="guide-item">Тап по группе - развернуть</div>
+                  </div>
                 </div>
               </div>
             </div>
