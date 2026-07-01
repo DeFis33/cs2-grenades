@@ -968,7 +968,7 @@ kbd {
 /* На ПК - больше размер */
 @media (min-width: 769px) {
   .fullscreen-image {
-    max-width: 150vw;
+    max-width: none;
     max-height: 150vh;
   }
 }
