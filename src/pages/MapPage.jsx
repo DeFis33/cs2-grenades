@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Header from '../components/Header';
+import AuthModal from '../components/AuthModal';
 import { useLanguage } from '../context/LanguageContext';
 
 const GIST_ID = '8f1c7f4ee430dd9bf0c317a782938d5b';
@@ -34,16 +35,12 @@ const maps = [
   { id: 'dust2', name: 'Dust 2' },
 ];
 
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
-
-function MapPage({ editMode, onLoginSuccess, onLogout }) {
+function MapPage({ user, onLogout, onRegister, onLogin }) {
   const { mapId } = useParams();
   const selectedMap = mapId;
   const [markers, setMarkers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showLogin, setShowLogin] = useState(false);
-  const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
   const [granadeMenu, setGranadeMenu] = useState(null);
   const [sidePanel, setSidePanel] = useState(null);
   const [wasDragging, setWasDragging] = useState(false);
@@ -106,6 +103,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
             videoUrl: m.videoUrl || '',
             side: m.side || '',
             images: m.images || [],
+            name: m.name || '',
           };
         });
         setMarkers(fixed);
@@ -174,22 +172,9 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
     updateMarkers(collapsed);
   };
 
-  const handleLogin = () => {
-    if (password === ADMIN_PASSWORD) {
-      onLoginSuccess();
-      setShowLogin(false);
-      setPassword('');
-      setLoginError(false);
-    } else {
-      setLoginError(true);
-    }
-  };
-
-  const handleKeyDown = (e) => { if (e.key === 'Enter') handleLogin(); };
-
   const handleMapClick = (e) => {
     if (expandedGroup) { collapseGroup(expandedGroup); setExpandedGroup(null); }
-    if (!editMode || !selectedMap) return;
+    if (!user || !selectedMap) return;
     if (e.target.closest('circle')) return;
 
     if (drawingLine) {
@@ -231,6 +216,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
       throwType: '',
       side: '',
       images: [],
+      name: '',
     };
     const updated = recalculateGroup([...markers, newMarker], granadeMenu.x, granadeMenu.y, selectedMap);
     updateMarkers(updated);
@@ -238,7 +224,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   };
 
   const handleMarkerRightClick = (e, markerId) => {
-    if (!editMode) return;
+    if (!user) return;
     e.preventDefault(); e.stopPropagation();
     const deleted = markers.find(m => m.id === markerId);
     if (!deleted) return;
@@ -253,14 +239,14 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
     if (e.defaultPrevented) return;
     setGranadeMenu(null);
     if (wasDragging) { setWasDragging(false); return; }
-    if (editMode && e.ctrlKey) { setGranadeMenu({ x: marker.x, y: marker.y }); setSidePanel(null); setDrawingLine(null); return; }
-    if (editMode && e.shiftKey) { setDrawingLine({ markerId: marker.id, fromX: marker.x, fromY: marker.y }); setSidePanel(null); setExpandedGroup(null); return; }
-    if (editMode) setSidePanel({ marker, mode: 'edit' });
-    else if (marker.videoUrl || (marker.images && marker.images.length > 0) || marker.throwType || marker.side) setSidePanel({ marker, mode: 'view' });
+    if (user && e.ctrlKey) { setGranadeMenu({ x: marker.x, y: marker.y }); setSidePanel(null); setDrawingLine(null); return; }
+    if (user && e.shiftKey) { setDrawingLine({ markerId: marker.id, fromX: marker.x, fromY: marker.y }); setSidePanel(null); setExpandedGroup(null); return; }
+    if (user) setSidePanel({ marker, mode: 'edit' });
+    else if (marker.videoUrl || (marker.images && marker.images.length > 0) || marker.throwType || marker.side || marker.name) setSidePanel({ marker, mode: 'view' });
   };
 
   const handleMarkerMouseDown = (e, marker) => {
-    if (!editMode) return;
+    if (!user) return;
     e.preventDefault();
     e.stopPropagation();
 
@@ -348,7 +334,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   };
 
   const handleGroupMouseDown = (e, groupKey) => {
-    if (!editMode) return;
+    if (!user) return;
 
     const isTouch = e.type === 'touchstart';
     e.stopPropagation();
@@ -413,7 +399,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
 
   const handleGroupClick = (e, groupKey) => {
     e.stopPropagation();
-    if (editMode && e.ctrlKey) { const [gx, gy] = groupKey.split(',').map(Number); setGranadeMenu({ x: gx, y: gy }); setSidePanel(null); setDrawingLine(null); setExpandedGroup(null); return; }
+    if (user && e.ctrlKey) { const [gx, gy] = groupKey.split(',').map(Number); setGranadeMenu({ x: gx, y: gy }); setSidePanel(null); setDrawingLine(null); setExpandedGroup(null); return; }
     const [gx, gy] = groupKey.split(',').map(Number);
     if (expandedGroup !== groupKey) { const expanded = recalculateGroup(markers, gx, gy, selectedMap); updateMarkers(expanded); setExpandedGroup(groupKey); }
     else { collapseGroup(groupKey); setExpandedGroup(null); }
@@ -424,7 +410,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   const handleMarkerLeave = () => setHoveredMarker(null);
 
   const handleBendMouseDown = (e, marker) => {
-    if (!editMode) return;
+    if (!user) return;
     e.stopPropagation();
     e.preventDefault();
 
@@ -525,23 +511,19 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
       </Helmet>
 
       <Header
-        editMode={editMode}
+        user={user}
         guideOpen={guideOpen}
         setGuideOpen={setGuideOpen}
         onLogout={onLogout}
-        onLoginClick={() => setShowLogin(true)}
+        onUserClick={() => setShowAuth(true)}
       />
 
-      {showLogin && (
-        <div className="modal-overlay" onClick={() => { setShowLogin(false); setLoginError(false); setPassword(''); }}>
-          <div className="login-modal" onClick={e => e.stopPropagation()}>
-            <button className="login-close" onClick={() => { setShowLogin(false); setLoginError(false); setPassword(''); }}>✕</button>
-            <h2 className="login-title">{t('login')}</h2>
-            <input type="password" className="login-input" placeholder={t('password')} value={password} onChange={(e) => { setPassword(e.target.value); setLoginError(false); }} onKeyDown={handleKeyDown} autoFocus />
-            {loginError && <p className="login-error">{t('wrongPassword')}</p>}
-            <button className="login-btn" onClick={handleLogin}>{t('loginBtn')}</button>
-          </div>
-        </div>
+      {showAuth && (
+        <AuthModal
+          onClose={() => setShowAuth(false)}
+          onRegister={onRegister}
+          onLogin={onLogin}
+        />
       )}
 
       <main className="main">
@@ -576,8 +558,8 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                   const isHovered = hoveredMarker?.id === marker.id;
                   const isDrawing = drawingLine?.markerId === marker.id;
 
-                  if (editMode && hoveredMarker && !isHovered && !isDrawing) return null;
-                  if (!editMode && !isHovered && !isDrawing) return null;
+                  if (user && hoveredMarker && !isHovered && !isDrawing) return null;
+                  if (!user && !isHovered && !isDrawing) return null;
 
                   const group = Object.values(groupedMarkers).find(g => g.some(m => m.id === marker.id));
                   let ex = (marker.displayX || marker.x) * 8;
@@ -606,7 +588,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                       <line x1={sx} y1={sy} x2={mx} y2={my} stroke="white" strokeWidth="2" strokeDasharray="6,3" style={{ pointerEvents: 'none' }} />
                       <line x1={mx} y1={my} x2={ex} y2={ey} stroke="white" strokeWidth="2" strokeDasharray="6,3" style={{ pointerEvents: 'none' }} />
                       <circle cx={sx} cy={sy} r="5" fill="white" opacity="0.9" style={{ pointerEvents: 'none' }} />
-                      {editMode && marker.lineTo && (
+                      {user && marker.lineTo && (
                         <circle
                           cx={mx}
                           cy={my}
@@ -649,7 +631,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                       onContextMenu={(e) => handleMarkerRightClick(e, marker.id)}
                       onMouseEnter={() => handleMarkerHover(marker)}
                       onMouseLeave={handleMarkerLeave}
-                      title={type?.type}>
+                      title={marker.name || type?.type}>
                       <img src={type?.icon} alt={type?.type} className="marker-icon-img" />
                     </div>
                   );
@@ -670,7 +652,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                               onContextMenu={(e) => handleMarkerRightClick(e, marker.id)}
                               onMouseEnter={() => handleMarkerHover(marker)}
                               onMouseLeave={handleMarkerLeave}
-                              title={type?.type}>
+                              title={marker.name || type?.type}>
                               <img src={type?.icon} alt={type?.type} className="marker-icon-img" />
                             </div>
                           );
@@ -681,7 +663,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                     ) : (
                       <div
                         className="marker group-marker"
-                        style={{ left: `${gx}%`, top: `${gy}%`, cursor: editMode ? 'move' : 'pointer' }}
+                        style={{ left: `${gx}%`, top: `${gy}%`, cursor: user ? 'move' : 'pointer' }}
                         onClick={(e) => handleGroupClick(e, key)}
                         onMouseDown={(e) => handleGroupMouseDown(e, key)}
                         onTouchStart={(e) => handleGroupMouseDown(e, key)}
@@ -695,135 +677,134 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
               })}
             </div>
 
-{sidePanel && (
-  <div className="side-panel" onClick={e => e.stopPropagation()}>
-    <button className="side-panel-close" onClick={() => setSidePanel(null)}>✕</button>
-    <div className="side-panel-type">
-      <img src={granadeTypes.find(g => g.type === sidePanel.marker.type)?.icon} alt="" className="side-panel-type-icon" />
-      <span>{sidePanel.marker.name || granadeTypes.find(g => g.type === sidePanel.marker.type)?.type}</span>
-    </div>
-    {sidePanel.mode === 'edit' ? (
-      <>
-        <div className="throw-type-block">
-          <p className="throw-type-label">{t('grenadeName')}</p>
-          <input
-            type="text"
-            className="video-url-input"
-            placeholder={t('grenadeNamePlaceholder')}
-            defaultValue={sidePanel.marker.name || ''}
-            onBlur={(e) => {
-              const newName = e.target.value;
-              updateMarkers(markers.map(m => 
-                m.id === sidePanel.marker.id ? { ...m, name: newName } : m
-              ));
-              setSidePanel(prev => ({ 
-                ...prev, 
-                marker: { ...prev.marker, name: newName } 
-              }));
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.target.blur();
-              }
-            }}
-          />
-        </div>
-
-        <div className="edit-video-block">
-          {sidePanel.marker.lineTo && <button className="delete-line-btn" onClick={handleDeleteLine}>{t('deleteTrajectory')}</button>}
-          {sidePanel.marker.videoUrl && <button className="delete-line-btn" onClick={handleDeleteVideo}>{t('deleteVideo')}</button>}
-        </div>
-        {sidePanel.marker.videoUrl ? (
-          <div className="video-loaded-block"><video src={sidePanel.marker.videoUrl} controls className="side-video" /></div>
-        ) : (
-          <div className="video-url-block"><input type="text" className="video-url-input" placeholder={t('videoPlaceholder')} value={sidePanel.marker.videoUrl || ''} onChange={(e) => { updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, videoUrl: e.target.value } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, videoUrl: e.target.value } })); }} /></div>
-        )}
-
-        <div className="images-block">
-          <p className="throw-type-label">{t('images')}</p>
-
-          <div className="video-url-block">
-            <input
-              type="text"
-              className="video-url-input"
-              placeholder={t('imagePlaceholder')}
-              value={sidePanel.marker.newImageUrl || ''}
-              onChange={(e) => {
-                const url = e.target.value;
-                const updatedMarker = { ...sidePanel.marker, newImageUrl: url };
-
-                if (url && url.startsWith('http')) {
-                  updatedMarker.images = [...(sidePanel.marker.images || []), url];
-                  updatedMarker.newImageUrl = '';
-                }
-
-                setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
-
-                if (updatedMarker.images.length > (sidePanel.marker.images || []).length) {
-                  updateMarkers(markers.map(m =>
-                    m.id === sidePanel.marker.id ? updatedMarker : m
-                  ));
-                }
-              }}
-            />
-          </div>
-
-          {sidePanel.marker.images && sidePanel.marker.images.length > 0 && (
-            <div className="images-gallery">
-              {sidePanel.marker.images.map((img, index) => (
-                <div key={index} className="image-item">
-                  <img src={img} alt={`${t('screenshot')} ${index + 1}`} className="gallery-image" onClick={() => setFullscreenImage(img)} />
-                  <button
-                    className="image-delete-btn"
-                    onClick={() => {
-                      const updatedImages = sidePanel.marker.images.filter((_, i) => i !== index);
-                      const updatedMarker = { ...sidePanel.marker, images: updatedImages };
-                      updateMarkers(markers.map(m =>
-                        m.id === sidePanel.marker.id ? updatedMarker : m
-                      ));
-                      setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
-                    }}
-                  >
-                    ✕
-                  </button>
+            {sidePanel && (
+              <div className="side-panel" onClick={e => e.stopPropagation()}>
+                <button className="side-panel-close" onClick={() => setSidePanel(null)}>✕</button>
+                <div className="side-panel-type">
+                  <img src={granadeTypes.find(g => g.type === sidePanel.marker.type)?.icon} alt="" className="side-panel-type-icon" />
+                  <span>{sidePanel.marker.name || granadeTypes.find(g => g.type === sidePanel.marker.type)?.type}</span>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                {sidePanel.mode === 'edit' ? (
+                  <>
+                    <div className="throw-type-block">
+                      <p className="throw-type-label">{t('grenadeName')}</p>
+                      <input
+                        type="text"
+                        className="video-url-input"
+                        placeholder={t('grenadeNamePlaceholder')}
+                        defaultValue={sidePanel.marker.name || ''}
+                        onBlur={(e) => {
+                          const newName = e.target.value;
+                          updateMarkers(markers.map(m => 
+                            m.id === sidePanel.marker.id ? { ...m, name: newName } : m
+                          ));
+                          setSidePanel(prev => ({ 
+                            ...prev, 
+                            marker: { ...prev.marker, name: newName } 
+                          }));
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.target.blur();
+                          }
+                        }}
+                      />
+                    </div>
 
-        <div className="throw-type-block">
-          <p className="throw-type-label">{t('throwType')}</p>
-          <select className="throw-type-select" value={sidePanel.marker.throwType || ''} onChange={(e) => handleThrowTypeChange(e.target.value)}>{throwTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
-        </div>
-        <div className="throw-type-block">
-          <p className="throw-type-label">{t('side')}</p>
-          <div className="side-buttons">{sideTypes.filter(s => s.value !== '').map(s => (
-            <button key={s.value} className={`side-btn ${sidePanel.marker.side === s.value ? 'active' : ''}`} onClick={() => handleSideChange(sidePanel.marker.side === s.value ? '' : s.value)}><img src={s.icon} alt={s.label} className="side-btn-icon" /></button>
-          ))}</div>
-        </div>
-      </>
-    ) : (
-      <>
-        <div className="video-container">{sidePanel.marker.videoUrl ? <video src={sidePanel.marker.videoUrl} controls className="side-video" /> : <p className="no-video">{t('noVideo')}</p>}</div>
+                    <div className="edit-video-block">
+                      {sidePanel.marker.lineTo && <button className="delete-line-btn" onClick={handleDeleteLine}>{t('deleteTrajectory')}</button>}
+                      {sidePanel.marker.videoUrl && <button className="delete-line-btn" onClick={handleDeleteVideo}>{t('deleteVideo')}</button>}
+                    </div>
+                    {sidePanel.marker.videoUrl ? (
+                      <div className="video-loaded-block"><video src={sidePanel.marker.videoUrl} controls className="side-video" /></div>
+                    ) : (
+                      <div className="video-url-block"><input type="text" className="video-url-input" placeholder={t('videoPlaceholder')} value={sidePanel.marker.videoUrl || ''} onChange={(e) => { updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, videoUrl: e.target.value } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, videoUrl: e.target.value } })); }} /></div>
+                    )}
 
-        {sidePanel.marker.images && sidePanel.marker.images.length > 0 && (
-          <div className="images-gallery">
-            {sidePanel.marker.images.map((img, index) => (
-              <div key={index} className="image-item">
-                <img src={img} alt={`${t('screenshot')} ${index + 1}`} className="gallery-image" onClick={() => setFullscreenImage(img)} />
+                    <div className="images-block">
+                      <p className="throw-type-label">{t('images')}</p>
+
+                      <div className="video-url-block">
+                        <input
+                          type="text"
+                          className="video-url-input"
+                          placeholder={t('imagePlaceholder')}
+                          value={sidePanel.marker.newImageUrl || ''}
+                          onChange={(e) => {
+                            const url = e.target.value;
+                            const updatedMarker = { ...sidePanel.marker, newImageUrl: url };
+
+                            if (url && url.startsWith('http')) {
+                              updatedMarker.images = [...(sidePanel.marker.images || []), url];
+                              updatedMarker.newImageUrl = '';
+                            }
+
+                            setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
+
+                            if (updatedMarker.images.length > (sidePanel.marker.images || []).length) {
+                              updateMarkers(markers.map(m =>
+                                m.id === sidePanel.marker.id ? updatedMarker : m
+                              ));
+                            }
+                          }}
+                        />
+                      </div>
+
+                      {sidePanel.marker.images && sidePanel.marker.images.length > 0 && (
+                        <div className="images-gallery">
+                          {sidePanel.marker.images.map((img, index) => (
+                            <div key={index} className="image-item">
+                              <img src={img} alt={`${t('screenshot')} ${index + 1}`} className="gallery-image" onClick={() => setFullscreenImage(img)} />
+                              <button
+                                className="image-delete-btn"
+                                onClick={() => {
+                                  const updatedImages = sidePanel.marker.images.filter((_, i) => i !== index);
+                                  const updatedMarker = { ...sidePanel.marker, images: updatedImages };
+                                  updateMarkers(markers.map(m =>
+                                    m.id === sidePanel.marker.id ? updatedMarker : m
+                                  ));
+                                  setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="throw-type-block">
+                      <p className="throw-type-label">{t('throwType')}</p>
+                      <select className="throw-type-select" value={sidePanel.marker.throwType || ''} onChange={(e) => handleThrowTypeChange(e.target.value)}>{throwTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
+                    </div>
+                    <div className="throw-type-block">
+                      <p className="throw-type-label">{t('side')}</p>
+                      <div className="side-buttons">{sideTypes.filter(s => s.value !== '').map(s => (
+                        <button key={s.value} className={`side-btn ${sidePanel.marker.side === s.value ? 'active' : ''}`} onClick={() => handleSideChange(sidePanel.marker.side === s.value ? '' : s.value)}><img src={s.icon} alt={s.label} className="side-btn-icon" /></button>
+                      ))}</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="video-container">{sidePanel.marker.videoUrl ? <video src={sidePanel.marker.videoUrl} controls className="side-video" /> : <p className="no-video">{t('noVideo')}</p>}</div>
+
+                    {sidePanel.marker.images && sidePanel.marker.images.length > 0 && (
+                      <div className="images-gallery">
+                        {sidePanel.marker.images.map((img, index) => (
+                          <div key={index} className="image-item">
+                            <img src={img} alt={`${t('screenshot')} ${index + 1}`} className="gallery-image" onClick={() => setFullscreenImage(img)} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {sidePanel.marker.throwType && <div className="throw-type-display">{t('throwType')} {throwTypes.find(t => t.value === sidePanel.marker.throwType)?.label}</div>}
+                    {sidePanel.marker.side && <div className="side-display"><span className="side-display-label">{t('side')}</span><img src={sideTypes.find(s => s.value === sidePanel.marker.side)?.icon} alt="" className="side-display-icon" /></div>}
+                  </>
+                )}
               </div>
-            ))}
-          </div>
-        )}
-
-        {sidePanel.marker.throwType && <div className="throw-type-display">{t('throwType')} {throwTypes.find(t => t.value === sidePanel.marker.throwType)?.label}</div>}
-        {sidePanel.marker.side && <div className="side-display"><span className="side-display-label">{t('side')}</span><img src={sideTypes.find(s => s.value === sidePanel.marker.side)?.icon} alt="" className="side-display-icon" /></div>}
-      </>
-    )}
-  </div>
-)}
-
+            )}
           </div>
         )}
 
@@ -939,7 +920,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
           </div>
         )}
 
-        {editMode && sidePanel?.marker && (
+        {user && sidePanel?.marker && (
           <div className="mobile-tools">
             <button
               className="mobile-tool-btn"

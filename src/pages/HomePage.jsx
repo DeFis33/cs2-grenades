@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Header from '../components/Header';
+import AuthModal from '../components/AuthModal';
 import { useLanguage } from '../context/LanguageContext';
-
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
 
 const mapsList = [
   { id: 'dust2', name: 'Dust 2', image: 'dust2.png', available: true },
@@ -16,27 +15,9 @@ const mapsList = [
   { id: 'anubis', name: 'Anubis', image: null, available: false },
 ];
 
-function HomePage({ editMode, onLogout }) {
+function HomePage({ user, onLogout }) {
   const { lang, t } = useLanguage();
-  const [showLogin, setShowLogin] = useState(false);
-  const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState(false);
-
-  const handleLogin = () => {
-    if (password === ADMIN_PASSWORD) {
-      localStorage.setItem('cs2_editor_auth', password); // Сохраняем сам пароль
-      setShowLogin(false);
-      setPassword('');
-      setLoginError(false);
-      window.location.reload();
-    } else {
-      setLoginError(true);
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') handleLogin();
-  };
+  const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
     document.title = t('homeTitle');
@@ -48,21 +29,13 @@ function HomePage({ editMode, onLogout }) {
         <title>{t('homeTitle')}</title>
       </Helmet>
       <Header
-        editMode={editMode}
+        user={user}
         onLogout={onLogout}
-        onLoginClick={() => setShowLogin(true)}
+        onUserClick={() => setShowAuth(true)}
       />
 
-      {showLogin && (
-        <div className="modal-overlay" onClick={() => { setShowLogin(false); setLoginError(false); setPassword(''); }}>
-          <div className="login-modal" onClick={e => e.stopPropagation()}>
-            <button className="login-close" onClick={() => { setShowLogin(false); setLoginError(false); setPassword(''); }}>✕</button>
-            <h2 className="login-title">{t('login')}</h2>
-            <input type="password" className="login-input" placeholder={t('password')} value={password} onChange={(e) => { setPassword(e.target.value); setLoginError(false); }} onKeyDown={handleKeyDown} autoFocus />
-            {loginError && <p className="login-error">{t('wrongPassword')}</p>}
-            <button className="login-btn" onClick={handleLogin}>{t('loginBtn')}</button>
-          </div>
-        </div>
+      {showAuth && (
+        <AuthModal onClose={() => setShowAuth(false)} />
       )}
 
       <div className="home-page">

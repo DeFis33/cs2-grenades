@@ -11,7 +11,7 @@ const languages = [
   { code: 'ru', label: 'RU' },
 ];
 
-function Header({ editMode, guideOpen, setGuideOpen, onLogout, onLoginClick }) {
+function Header({ user, guideOpen, setGuideOpen, onLogout, onUserClick }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const location = useLocation();
@@ -73,7 +73,7 @@ function Header({ editMode, guideOpen, setGuideOpen, onLogout, onLoginClick }) {
             )}
           </div>
 
-          {editMode && !isHome && (
+          {user && !isHome && (
             <div className={`guide-container ${guideOpen ? 'active' : ''}`}>
               <button
                 className="guide-icon-btn"
@@ -109,13 +109,13 @@ function Header({ editMode, guideOpen, setGuideOpen, onLogout, onLoginClick }) {
               </div>
             </div>
           )}
-          {editMode ? (
-            <button className="edit-icon-btn active" onClick={onLogout} title={t('exitEditor')}>
-              <img src="/icons/edit-active.png" alt={t('editor')} className="edit-icon-img" />
+          {user ? (
+            <button className="edit-icon-btn active" onClick={onLogout} title={user.email}>
+              <img src="/icons/user.png" alt={t('profile')} className="edit-icon-img" />
             </button>
           ) : (
-            <button className="edit-icon-btn" onClick={onLoginClick} title={t('editor')}>
-              <img src="/icons/edit.png" alt={t('editor')} className="edit-icon-img" />
+            <button className="edit-icon-btn" onClick={onUserClick} title={t('login')}>
+              <img src="/icons/user.png" alt={t('login')} className="edit-icon-img" />
             </button>
           )}
         </div>

@@ -1,28 +1,44 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from './firebase';
 import { LanguageProvider } from './context/LanguageContext';
 import HomePage from './pages/HomePage';
 import MapPage from './pages/MapPage';
 import './App.css';
 
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
-
 function App() {
-  const [editMode, setEditMode] = useState(() => {
-    const savedPassword = localStorage.getItem('cs2_editor_auth');
-    return savedPassword === ADMIN_PASSWORD;
-  });
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleLogout = () => {
-    setEditMode(false);
-    localStorage.removeItem('cs2_editor_auth');
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await signOut(auth);
   };
 
-  const handleLoginSuccess = () => {
-    setEditMode(true);
-    localStorage.setItem('cs2_editor_auth', ADMIN_PASSWORD);
-  };
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh', 
+        backgroundColor: '#0f0f1a', 
+        color: '#a0aec0',
+        fontFamily: 'Arial, sans-serif'
+      }}>
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <HelmetProvider>
@@ -30,8 +46,9 @@ function App() {
         <Router>
           <div className="app">
             <Routes>
-              <Route path="/" element={<HomePage editMode={editMode} onLogout={handleLogout} />} />
-              <Route path="/map/:mapId" element={<MapPage editMode={editMode} onLoginSuccess={handleLoginSuccess} onLogout={handleLogout} />} />
+              <Route path="/" element={<HomePage user={user} onLogout={handleLogout} />} />
+              <Route path="/map/:mapId" element={<MapPage user={user} onLogout={handleLogout} />} />
+              <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </div>
         </Router>
