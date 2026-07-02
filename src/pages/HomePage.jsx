@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Header from '../components/Header';
-import AuthModal from '../components/AuthModal';
 import { useLanguage } from '../context/LanguageContext';
 
 const mapsList = [
@@ -15,9 +14,8 @@ const mapsList = [
   { id: 'anubis', name: 'Anubis', image: null, available: false },
 ];
 
-function HomePage({ user, onLogout }) {
+function HomePage() {
   const { lang, t } = useLanguage();
-  const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
     document.title = t('homeTitle');
@@ -28,15 +26,7 @@ function HomePage({ user, onLogout }) {
       <Helmet>
         <title>{t('homeTitle')}</title>
       </Helmet>
-      <Header
-        user={user}
-        onLogout={onLogout}
-        onUserClick={() => setShowAuth(true)}
-      />
-
-      {showAuth && (
-        <AuthModal onClose={() => setShowAuth(false)} />
-      )}
+      <Header />
 
       <div className="home-page">
         <div className="maps-grid">

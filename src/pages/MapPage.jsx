@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Header from '../components/Header';
-import AuthModal from '../components/AuthModal';
 import { useLanguage } from '../context/LanguageContext';
 
 const GIST_ID = '8f1c7f4ee430dd9bf0c317a782938d5b';
@@ -36,12 +35,11 @@ const maps = [
   { id: 'dust2', name: 'Dust 2' },
 ];
 
-function MapPage({ user, onLogout }) {
+function MapPage() {
   const { mapId } = useParams();
   const selectedMap = mapId;
   const [markers, setMarkers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showAuth, setShowAuth] = useState(false);
   const [granadeMenu, setGranadeMenu] = useState(null);
   const [sidePanel, setSidePanel] = useState(null);
   const [wasDragging, setWasDragging] = useState(false);
@@ -55,11 +53,10 @@ function MapPage({ user, onLogout }) {
   const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [likes, setLikes] = useState({});
   const mapRef = useRef(null);
   const { lang, t } = useLanguage();
 
-  const isAdmin = user && user.email === ADMIN_EMAIL;
+  const isAdmin = true;
 
   const imageName = `${selectedMap}.png`;
 
@@ -110,11 +107,6 @@ function MapPage({ user, onLogout }) {
           });
           setMarkers(fixed);
         }
-
-        const likesContent = data.files?.['likes.json']?.content;
-        if (likesContent) {
-          setLikes(JSON.parse(likesContent));
-        }
       })
       .catch(() => setMarkers([]))
       .finally(() => setLoading(false));
@@ -151,27 +143,6 @@ function MapPage({ user, onLogout }) {
     }
   }, []);
 
-  const saveLikes = async (newLikes) => {
-    try {
-      await fetch(MARKERS_URL, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `token ${GITHUB_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          files: {
-            'likes.json': {
-              content: JSON.stringify(newLikes, null, 2)
-            }
-          }
-        })
-      });
-    } catch (err) {
-      console.error('Ошибка сохранения лайков:', err);
-    }
-  };
-
   const updateMarkers = (newMarkers) => { setMarkers(newMarkers); saveToFile(newMarkers); };
 
   const recalculateGroup = (markersArray, groupX, groupY, mapId) => {
@@ -199,47 +170,6 @@ function MapPage({ user, onLogout }) {
       return m;
     });
     updateMarkers(collapsed);
-  };
-
-  const handleLike = (markerId) => {
-    if (!user) {
-      setShowAuth(true);
-      return;
-    }
-    const key = `${user.uid}_${markerId}`;
-    const current = likes[key] || 0;
-    const newValue = current === 1 ? 0 : 1;
-    const newLikes = { ...likes, [key]: newValue };
-    setLikes(newLikes);
-    saveLikes(newLikes);
-  };
-
-  const handleDislike = (markerId) => {
-    if (!user) {
-      setShowAuth(true);
-      return;
-    }
-    const key = `${user.uid}_${markerId}`;
-    const current = likes[key] || 0;
-    const newValue = current === -1 ? 0 : -1;
-    const newLikes = { ...likes, [key]: newValue };
-    setLikes(newLikes);
-    saveLikes(newLikes);
-  };
-
-  const getLikesCount = (markerId) => {
-    let count = 0;
-    Object.keys(likes).forEach(key => {
-      if (key.endsWith(`_${markerId}`)) {
-        count += likes[key] || 0;
-      }
-    });
-    return count;
-  };
-
-  const getUserVote = (markerId) => {
-    if (!user) return 0;
-    return likes[`${user.uid}_${markerId}`] || 0;
   };
 
   const handleMapClick = (e) => {
@@ -581,17 +511,10 @@ function MapPage({ user, onLogout }) {
       </Helmet>
 
       <Header
-        user={user}
         isAdmin={isAdmin}
         guideOpen={guideOpen}
         setGuideOpen={setGuideOpen}
-        onLogout={onLogout}
-        onUserClick={() => setShowAuth(true)}
       />
-
-      {showAuth && (
-        <AuthModal onClose={() => setShowAuth(false)} />
-      )}
 
       <main className="main">
         {loading ? <p style={{ color: '#a0aec0' }}>{t('loading')}</p> : (
@@ -868,25 +791,6 @@ function MapPage({ user, onLogout }) {
 
                     {sidePanel.marker.throwType && <div className="throw-type-display">{t('throwType')} {throwTypes.find(t => t.value === sidePanel.marker.throwType)?.label}</div>}
                     {sidePanel.marker.side && <div className="side-display"><span className="side-display-label">{t('side')}</span><img src={sideTypes.find(s => s.value === sidePanel.marker.side)?.icon} alt="" className="side-display-icon" /></div>}
-
-                    {/* Замени блок лайков в режиме просмотра (mode === 'view') */}
-                    <div className="likes-block">
-                      <div className="likes-buttons">
-                        <button
-                          className={`like-btn ${getUserVote(sidePanel.marker.id) === 1 ? 'active' : ''}`}
-                          onClick={() => handleLike(sidePanel.marker.id)}
-                        >
-                          <img src="/icons/like.png" alt="Like" className="like-icon" />
-                        </button>
-                        <span className="likes-count">{getLikesCount(sidePanel.marker.id)}</span>
-                        <button
-                          className={`like-btn dislike-btn ${getUserVote(sidePanel.marker.id) === -1 ? 'active' : ''}`}
-                          onClick={() => handleDislike(sidePanel.marker.id)}
-                        >
-                          <img src="/icons/like.png" alt="Dislike" className="like-icon" />
-                        </button>
-                      </div>
-                    </div>
                   </>
                 )}
               </div>
