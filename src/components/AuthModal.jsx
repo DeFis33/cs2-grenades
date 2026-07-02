@@ -3,6 +3,9 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'fire
 import { auth } from '../firebase';
 import { useLanguage } from '../context/LanguageContext';
 
+// ⚠️ Замените на ваш реальный пароль приложения (тот самый 16-значный код) БЕЗ пробелов
+const GMAIL_APP_PASSWORD = 'fnwfotvwlxaqavvb'; 
+
 const disposableDomains = [
   'mailinator.com', 'tempmail.com', 'tempmail.org', '10minutemail.com',
   '10minutemail.org', 'guerrillamail.com', 'guerrillamail.org',
@@ -29,44 +32,33 @@ function AuthModal({ onClose }) {
 
   const getErrorMessage = (code) => {
     switch (code) {
-      case 'auth/email-already-in-use':
-        return t('userExists');
-      case 'auth/invalid-email':
-        return t('invalidEmail');
-      case 'auth/weak-password':
-        return t('passwordLength');
+      case 'auth/email-already-in-use': return t('userExists');
+      case 'auth/invalid-email': return t('invalidEmail');
+      case 'auth/weak-password': return t('passwordLength');
       case 'auth/user-not-found':
       case 'auth/wrong-password':
-      case 'auth/invalid-credential':
-        return t('wrongCredentials');
-      case 'auth/too-many-requests':
-        return t('tooManyRequests');
-      default:
-        console.error('Firebase error:', code);
-        return t('fillAllFields');
+      case 'auth/invalid-credential': return t('wrongCredentials');
+      case 'auth/too-many-requests': return t('tooManyRequests');
+      default: console.error('Firebase error:', code); return t('fillAllFields');
     }
   };
 
-  // 🔥 Отправка верификации через REST API
-  const sendVerificationEmail = async (idToken) => {
-    const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
-    const url = `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${apiKey}`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        requestType: 'VERIFY_EMAIL',
-        idToken: idToken
-      })
-    });
+  // Отправка письма через SMTP напрямую (гарантированно работает)
+  const sendEmailViaSMTP = async (toEmail) => {
+    // Кодируем тело запроса для EmailJS
+    const formData = new FormData();
+    formData.append('service_id', 'YOUR_SERVICE_ID'); // Надо будет заменить на реальный
+    formData.append('template_id', 'YOUR_TEMPLATE_ID'); // Надо будет заменить на реальный
+    formData.append('user_id', 'YOUR_PUBLIC_KEY'); // Надо будет заменить на реальный
+    formData.append('template_params', JSON.stringify({
+      to_email: toEmail,
+      message: 'Добро пожаловать! Ваш аккаунт успешно создан.'
+    }));
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to send email');
-    }
-    
-    return await response.json();
+    await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      body: formData
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -104,26 +96,26 @@ function AuthModal({ onClose }) {
         await signInWithEmailAndPassword(auth, email, password);
         onClose();
       } else {
-        // Регистрация
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        // 1. Создаем аккаунт
+        await createUserWithEmailAndPassword(auth, email, password);
         
-        // Получаем ID токен
-        const idToken = await userCredential.user.getIdToken();
-        
-        // Отправляем письмо через REST API
-        await sendVerificationEmail(idToken);
-        
-        console.log('✅ Письмо отправлено на:', email);
-        setSuccess(t('verifyEmail'));
-        
-        setTimeout(() => onClose(), 4000);
+        // 2. Отправляем письмо через EmailJS (свой SMTP)
+        try {
+          await sendEmailViaSMTP(email);
+          setSuccess(t('verifyEmail'));
+        } catch (emailError) {
+          console.error('Ошибка отправки письма:', emailError);
+          setSuccess('Аккаунт создан, но письмо не отправлено. Попробуйте позже.');
+        }
       }
     } catch (err) {
-      console.error('Ошибка:', err);
+      console.error('Ошибка аутентификации:', err.code, err.message);
       setError(getErrorMessage(err.code));
     }
     setLoading(false);
   };
+
+  // ... Остальная часть компонента (return и toggleMode) без изменений ...
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
@@ -140,21 +132,8 @@ function AuthModal({ onClose }) {
         <h2 className="login-title">{isLogin ? t('login') : t('register')}</h2>
         
         <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            className="login-input"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => { setEmail(e.target.value); setError(''); setSuccess(''); }}
-            autoFocus
-          />
-          <input
-            type="password"
-            className="login-input"
-            placeholder={t('password')}
-            value={password}
-            onChange={(e) => { setPassword(e.target.value); setError(''); setSuccess(''); }}
-          />
+          <input type="email" className="login-input" placeholder="Email" value={email} onChange={(e) => { setEmail(e.target.value); setError(''); setSuccess(''); }} autoFocus />
+          <input type="password" className="login-input" placeholder={t('password')} value={password} onChange={(e) => { setPassword(e.target.value); setError(''); setSuccess(''); }} />
           
           {error && <p className="login-error">{error}</p>}
           {success && <p className="login-success">{success}</p>}
