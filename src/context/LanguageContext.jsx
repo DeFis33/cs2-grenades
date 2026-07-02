@@ -53,6 +53,12 @@ const translations = {
     sideAny: 'Любая',
     grenadeName: 'Название гранаты:',
     grenadeNamePlaceholder: 'Введите название',
+    rating: 'Рейтинг',
+    verifyEmail: 'На ваш email отправлено письмо для подтверждения. Проверьте почту!',
+    emailNotVerified: 'Email не подтверждён. Проверьте почту или запросите письмо повторно.',
+    resendVerification: 'Отправить письмо повторно',
+    disposableEmail: 'Временные почты не принимаются. Используйте настоящий email.',
+    tooManyRequests: 'Слишком много попыток. Попробуйте позже.',
   },
   en: {
     maps: 'Maps',
@@ -106,6 +112,12 @@ const translations = {
     sideAny: 'Any',
     grenadeName: 'Grenade name:',
     grenadeNamePlaceholder: 'Enter name',
+    rating: 'Rating',
+    verifyEmail: 'Verification email sent. Please check your inbox!',
+    emailNotVerified: 'Email not verified. Check your inbox or resend verification.',
+    resendVerification: 'Resend verification email',
+    disposableEmail: 'Temporary emails are not allowed. Use a real email.',
+    tooManyRequests: 'Too many attempts. Try again later.',
   },
 };
 

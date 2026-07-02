@@ -1,7 +1,38 @@
 import { useState } from 'react';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useLanguage } from '../context/LanguageContext';
+
+const disposableDomains = [
+  'mailinator.com',
+  'tempmail.com',
+  'tempmail.org',
+  '10minutemail.com',
+  '10minutemail.org',
+  'guerrillamail.com',
+  'guerrillamail.org',
+  'sharklasers.com',
+  'yopmail.com',
+  'yopmail.fr',
+  'throwaway.email',
+  'trashmail.com',
+  'trashmail.org',
+  'fakeinbox.com',
+  'tempinbox.com',
+  'emailondeck.com',
+  'spam4.me',
+  'spamgourmet.com',
+  'jetable.org',
+  'dispostable.com',
+  'getairmail.com',
+  'mailnesia.com',
+  'spambox.us',
+  'spamspot.com',
+  'tempsky.com',
+  'tmpmail.org',
+  'moakt.com',
+  'dropmail.me',
+];
 
 function AuthModal({ onClose }) {
   const { t } = useLanguage();
@@ -10,6 +41,12 @@ function AuthModal({ onClose }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const isDisposableEmail = (email) => {
+    const domain = email.split('@')[1]?.toLowerCase();
+    return disposableDomains.includes(domain);
+  };
 
   const getErrorMessage = (code) => {
     switch (code) {
@@ -23,6 +60,8 @@ function AuthModal({ onClose }) {
       case 'auth/wrong-password':
       case 'auth/invalid-credential':
         return t('wrongCredentials');
+      case 'auth/too-many-requests':
+        return t('tooManyRequests');
       default:
         return t('fillAllFields');
     }
@@ -31,6 +70,7 @@ function AuthModal({ onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     setLoading(true);
 
     if (!email || !password) {
@@ -39,13 +79,56 @@ function AuthModal({ onClose }) {
       return;
     }
 
+    if (!email.includes('@') || !email.includes('.')) {
+      setError(t('invalidEmail'));
+      setLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError(t('passwordLength'));
+      setLoading(false);
+      return;
+    }
+
+    if (isDisposableEmail(email)) {
+      setError(t('disposableEmail'));
+      setLoading(false);
+      return;
+    }
+
     try {
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        if (!userCredential.user.emailVerified) {
+          setError(t('emailNotVerified'));
+          setLoading(false);
+          return;
+        }
+        onClose();
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(result.user);
+        setSuccessMessage(t('verifyEmail'));
+        setIsLogin(true);
       }
-      onClose();
+    } catch (err) {
+      setError(getErrorMessage(err.code));
+    }
+    setLoading(false);
+  };
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError(t('fillAllFields'));
+      return;
+    }
+    setLoading(true);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await sendEmailVerification(userCredential.user);
+      setSuccessMessage(t('verifyEmail'));
+      setError('');
     } catch (err) {
       setError(getErrorMessage(err.code));
     }
@@ -64,7 +147,7 @@ function AuthModal({ onClose }) {
             className="login-input"
             placeholder="Email"
             value={email}
-            onChange={(e) => { setEmail(e.target.value); setError(''); }}
+            onChange={(e) => { setEmail(e.target.value); setError(''); setSuccessMessage(''); }}
             autoFocus
           />
           <input
@@ -72,15 +155,22 @@ function AuthModal({ onClose }) {
             className="login-input"
             placeholder={t('password')}
             value={password}
-            onChange={(e) => { setPassword(e.target.value); setError(''); }}
+            onChange={(e) => { setPassword(e.target.value); setError(''); setSuccessMessage(''); }}
           />
           {error && <p className="login-error">{error}</p>}
+          {successMessage && <p className="login-success">{successMessage}</p>}
           <button type="submit" className="login-btn" disabled={loading}>
             {loading ? '...' : (isLogin ? t('loginBtn') : t('registerBtn'))}
           </button>
         </form>
 
-        <p className="auth-switch" onClick={() => { setIsLogin(!isLogin); setError(''); }}>
+        {isLogin && (
+          <p className="auth-switch" onClick={handleResendVerification}>
+            {t('resendVerification')}
+          </p>
+        )}
+
+        <p className="auth-switch" onClick={() => { setIsLogin(!isLogin); setError(''); setSuccessMessage(''); }}>
           {isLogin ? t('noAccount') : t('haveAccount')}
         </p>
       </div>

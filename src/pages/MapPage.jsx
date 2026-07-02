@@ -55,6 +55,7 @@ function MapPage({ user, onLogout }) {
   const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [likes, setLikes] = useState({});
   const mapRef = useRef(null);
   const { lang, t } = useLanguage();
 
@@ -71,45 +72,49 @@ function MapPage({ user, onLogout }) {
         const content = data.files['markers.json']?.content;
         if (!content) {
           setMarkers([]);
-          setLoading(false);
-          return;
+        } else {
+          const parsed = JSON.parse(content);
+          const fixed = parsed.map(m => {
+            const hasLineTo = m.lineTo && m.lineTo.x !== undefined && m.lineTo.y !== undefined;
+
+            let bendAbsoluteX = m.bendAbsoluteX;
+            let bendAbsoluteY = m.bendAbsoluteY;
+
+            if ((bendAbsoluteX === undefined || bendAbsoluteX === null) && hasLineTo) {
+              const sx = m.lineTo.x * 8;
+              const sy = m.lineTo.y * 6;
+              const ex = (m.displayX ?? m.x) * 8;
+              const ey = (m.displayY ?? m.y) * 6;
+              const midX = (sx + ex) / 2;
+              const midY = (sy + ey) / 2;
+              bendAbsoluteX = midX + (m.bendX || 0);
+              bendAbsoluteY = midY + (m.bendY || 0);
+            } else if (!hasLineTo) {
+              bendAbsoluteX = 0;
+              bendAbsoluteY = 0;
+            }
+
+            return {
+              ...m,
+              displayX: m.displayX ?? m.x,
+              displayY: m.displayY ?? m.y,
+              lineTo: hasLineTo ? m.lineTo : null,
+              bendAbsoluteX: bendAbsoluteX || 0,
+              bendAbsoluteY: bendAbsoluteY || 0,
+              throwType: m.throwType || '',
+              videoUrl: m.videoUrl || '',
+              side: m.side || '',
+              images: m.images || [],
+              name: m.name || '',
+            };
+          });
+          setMarkers(fixed);
         }
-        const parsed = JSON.parse(content);
-        const fixed = parsed.map(m => {
-          const hasLineTo = m.lineTo && m.lineTo.x !== undefined && m.lineTo.y !== undefined;
 
-          let bendAbsoluteX = m.bendAbsoluteX;
-          let bendAbsoluteY = m.bendAbsoluteY;
-
-          if ((bendAbsoluteX === undefined || bendAbsoluteX === null) && hasLineTo) {
-            const sx = m.lineTo.x * 8;
-            const sy = m.lineTo.y * 6;
-            const ex = (m.displayX ?? m.x) * 8;
-            const ey = (m.displayY ?? m.y) * 6;
-            const midX = (sx + ex) / 2;
-            const midY = (sy + ey) / 2;
-            bendAbsoluteX = midX + (m.bendX || 0);
-            bendAbsoluteY = midY + (m.bendY || 0);
-          } else if (!hasLineTo) {
-            bendAbsoluteX = 0;
-            bendAbsoluteY = 0;
-          }
-
-          return {
-            ...m,
-            displayX: m.displayX ?? m.x,
-            displayY: m.displayY ?? m.y,
-            lineTo: hasLineTo ? m.lineTo : null,
-            bendAbsoluteX: bendAbsoluteX || 0,
-            bendAbsoluteY: bendAbsoluteY || 0,
-            throwType: m.throwType || '',
-            videoUrl: m.videoUrl || '',
-            side: m.side || '',
-            images: m.images || [],
-            name: m.name || '',
-          };
-        });
-        setMarkers(fixed);
+        const likesContent = data.files?.['likes.json']?.content;
+        if (likesContent) {
+          setLikes(JSON.parse(likesContent));
+        }
       })
       .catch(() => setMarkers([]))
       .finally(() => setLoading(false));
@@ -146,6 +151,27 @@ function MapPage({ user, onLogout }) {
     }
   }, []);
 
+  const saveLikes = async (newLikes) => {
+    try {
+      await fetch(MARKERS_URL, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `token ${GITHUB_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          files: {
+            'likes.json': {
+              content: JSON.stringify(newLikes, null, 2)
+            }
+          }
+        })
+      });
+    } catch (err) {
+      console.error('Ошибка сохранения лайков:', err);
+    }
+  };
+
   const updateMarkers = (newMarkers) => { setMarkers(newMarkers); saveToFile(newMarkers); };
 
   const recalculateGroup = (markersArray, groupX, groupY, mapId) => {
@@ -173,6 +199,47 @@ function MapPage({ user, onLogout }) {
       return m;
     });
     updateMarkers(collapsed);
+  };
+
+  const handleLike = (markerId) => {
+    if (!user) {
+      setShowAuth(true);
+      return;
+    }
+    const key = `${user.uid}_${markerId}`;
+    const current = likes[key] || 0;
+    const newValue = current === 1 ? 0 : 1;
+    const newLikes = { ...likes, [key]: newValue };
+    setLikes(newLikes);
+    saveLikes(newLikes);
+  };
+
+  const handleDislike = (markerId) => {
+    if (!user) {
+      setShowAuth(true);
+      return;
+    }
+    const key = `${user.uid}_${markerId}`;
+    const current = likes[key] || 0;
+    const newValue = current === -1 ? 0 : -1;
+    const newLikes = { ...likes, [key]: newValue };
+    setLikes(newLikes);
+    saveLikes(newLikes);
+  };
+
+  const getLikesCount = (markerId) => {
+    let count = 0;
+    Object.keys(likes).forEach(key => {
+      if (key.endsWith(`_${markerId}`)) {
+        count += likes[key] || 0;
+      }
+    });
+    return count;
+  };
+
+  const getUserVote = (markerId) => {
+    if (!user) return 0;
+    return likes[`${user.uid}_${markerId}`] || 0;
   };
 
   const handleMapClick = (e) => {
@@ -695,12 +762,12 @@ function MapPage({ user, onLogout }) {
                         defaultValue={sidePanel.marker.name || ''}
                         onBlur={(e) => {
                           const newName = e.target.value;
-                          updateMarkers(markers.map(m => 
+                          updateMarkers(markers.map(m =>
                             m.id === sidePanel.marker.id ? { ...m, name: newName } : m
                           ));
-                          setSidePanel(prev => ({ 
-                            ...prev, 
-                            marker: { ...prev.marker, name: newName } 
+                          setSidePanel(prev => ({
+                            ...prev,
+                            marker: { ...prev.marker, name: newName }
                           }));
                         }}
                         onKeyDown={(e) => {
@@ -801,6 +868,25 @@ function MapPage({ user, onLogout }) {
 
                     {sidePanel.marker.throwType && <div className="throw-type-display">{t('throwType')} {throwTypes.find(t => t.value === sidePanel.marker.throwType)?.label}</div>}
                     {sidePanel.marker.side && <div className="side-display"><span className="side-display-label">{t('side')}</span><img src={sideTypes.find(s => s.value === sidePanel.marker.side)?.icon} alt="" className="side-display-icon" /></div>}
+
+                    {/* Замени блок лайков в режиме просмотра (mode === 'view') */}
+                    <div className="likes-block">
+                      <div className="likes-buttons">
+                        <button
+                          className={`like-btn ${getUserVote(sidePanel.marker.id) === 1 ? 'active' : ''}`}
+                          onClick={() => handleLike(sidePanel.marker.id)}
+                        >
+                          <img src="/icons/like.png" alt="Like" className="like-icon" />
+                        </button>
+                        <span className="likes-count">{getLikesCount(sidePanel.marker.id)}</span>
+                        <button
+                          className={`like-btn dislike-btn ${getUserVote(sidePanel.marker.id) === -1 ? 'active' : ''}`}
+                          onClick={() => handleDislike(sidePanel.marker.id)}
+                        >
+                          <img src="/icons/like.png" alt="Dislike" className="like-icon" />
+                        </button>
+                      </div>
+                    </div>
                   </>
                 )}
               </div>
