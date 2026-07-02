@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -41,12 +41,32 @@ function AuthModal({ onClose }) {
         return t('wrongCredentials');
       case 'auth/too-many-requests':
         return t('tooManyRequests');
-      case 'auth/network-request-failed':
-        return 'Ошибка сети. Проверьте подключение к интернету.';
       default:
-        console.error('Firebase auth error:', code); // Логируем реальную ошибку
+        console.error('Firebase error:', code);
         return t('fillAllFields');
     }
+  };
+
+  // 🔥 Отправка верификации через REST API
+  const sendVerificationEmail = async (idToken) => {
+    const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${apiKey}`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requestType: 'VERIFY_EMAIL',
+        idToken: idToken
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Failed to send email');
+    }
+    
+    return await response.json();
   };
 
   const handleSubmit = async (e) => {
@@ -55,7 +75,6 @@ function AuthModal({ onClose }) {
     setSuccess('');
     setLoading(true);
 
-    // Валидация
     if (!email || !password) {
       setError(t('fillAllFields'));
       setLoading(false);
@@ -82,39 +101,25 @@ function AuthModal({ onClose }) {
 
     try {
       if (isLogin) {
-        // 🔹 ВХОД
         await signInWithEmailAndPassword(auth, email, password);
         onClose();
       } else {
-        // 🔹 РЕГИСТРАЦИЯ
+        // Регистрация
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         
-        // 🔥 ОТПРАВКА ПИСЬМА - обернуто в отдельный try-catch
-        try {
-          await sendEmailVerification(userCredential.user);
-          console.log('✅ Письмо отправлено на:', email);
-          setSuccess(t('verifyEmail'));
-          
-          // Закрываем модалку через 3 секунды после показа сообщения
-          setTimeout(() => {
-            onClose();
-          }, 3000);
-          
-        } catch (verifyError) {
-          console.error('❌ Ошибка отправки письма:', verifyError.code, verifyError.message);
-          // Аккаунт создан, но письмо не ушло
-          setSuccess('Аккаунт создан! Но письмо не отправлено. Попробуйте позже.');
-          
-          // Логируем детали ошибки для отладки
-          console.log('Детали ошибки верификации:', {
-            code: verifyError.code,
-            message: verifyError.message,
-            email: email
-          });
-        }
+        // Получаем ID токен
+        const idToken = await userCredential.user.getIdToken();
+        
+        // Отправляем письмо через REST API
+        await sendVerificationEmail(idToken);
+        
+        console.log('✅ Письмо отправлено на:', email);
+        setSuccess(t('verifyEmail'));
+        
+        setTimeout(() => onClose(), 4000);
       }
     } catch (err) {
-      console.error('Ошибка аутентификации:', err.code, err.message);
+      console.error('Ошибка:', err);
       setError(getErrorMessage(err.code));
     }
     setLoading(false);
