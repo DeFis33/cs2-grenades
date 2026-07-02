@@ -19,7 +19,7 @@ function AuthModal({ onClose }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(''); // 👈 Добавляем success-состояние
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   const isDisposableEmail = (email) => {
@@ -41,7 +41,10 @@ function AuthModal({ onClose }) {
         return t('wrongCredentials');
       case 'auth/too-many-requests':
         return t('tooManyRequests');
+      case 'auth/network-request-failed':
+        return 'Ошибка сети. Проверьте подключение к интернету.';
       default:
+        console.error('Firebase auth error:', code); // Логируем реальную ошибку
         return t('fillAllFields');
     }
   };
@@ -49,9 +52,10 @@ function AuthModal({ onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccess(''); // Сбрасываем success
+    setSuccess('');
     setLoading(true);
 
+    // Валидация
     if (!email || !password) {
       setError(t('fillAllFields'));
       setLoading(false);
@@ -78,26 +82,50 @@ function AuthModal({ onClose }) {
 
     try {
       if (isLogin) {
+        // 🔹 ВХОД
         await signInWithEmailAndPassword(auth, email, password);
         onClose();
       } else {
-        // 👇 Регистрация + отправка верификации
+        // 🔹 РЕГИСТРАЦИЯ
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await userCredential.user.sendEmailVerification();
-        setSuccess(t('verifyEmail')); // Показываем зелёное/синее сообщение
-        // Не закрываем модалку — пусть пользователь увидит сообщение
+        
+        // 🔥 ОТПРАВКА ПИСЬМА - обернуто в отдельный try-catch
+        try {
+          await userCredential.user.sendEmailVerification();
+          console.log('✅ Письмо отправлено на:', email);
+          setSuccess(t('verifyEmail'));
+          
+          // Закрываем модалку через 3 секунды после показа сообщения
+          setTimeout(() => {
+            onClose();
+          }, 3000);
+          
+        } catch (verifyError) {
+          console.error('❌ Ошибка отправки письма:', verifyError.code, verifyError.message);
+          // Аккаунт создан, но письмо не ушло
+          setSuccess('Аккаунт создан! Но письмо не отправлено. Попробуйте позже.');
+          
+          // Логируем детали ошибки для отладки
+          console.log('Детали ошибки верификации:', {
+            code: verifyError.code,
+            message: verifyError.message,
+            email: email
+          });
+        }
       }
     } catch (err) {
+      console.error('Ошибка аутентификации:', err.code, err.message);
       setError(getErrorMessage(err.code));
     }
     setLoading(false);
   };
 
-  // Сброс success при переключении логин/регистрация
   const toggleMode = () => {
     setIsLogin(!isLogin);
     setError('');
     setSuccess('');
+    setEmail('');
+    setPassword('');
   };
 
   return (
@@ -122,8 +150,10 @@ function AuthModal({ onClose }) {
             value={password}
             onChange={(e) => { setPassword(e.target.value); setError(''); setSuccess(''); }}
           />
+          
           {error && <p className="login-error">{error}</p>}
-          {success && <p className="login-success">{success}</p>} {/* 👈 Вывод success */}
+          {success && <p className="login-success">{success}</p>}
+          
           <button type="submit" className="login-btn" disabled={loading}>
             {loading ? '...' : (isLogin ? t('loginBtn') : t('registerBtn'))}
           </button>
