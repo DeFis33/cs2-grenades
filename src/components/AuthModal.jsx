@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -91,7 +91,7 @@ function AuthModal({ onClose }) {
         
         // 🔥 ОТПРАВКА ПИСЬМА - обернуто в отдельный try-catch
         try {
-          await userCredential.user.sendEmailVerification();
+          await sendEmailVerification(userCredential.user);
           console.log('✅ Письмо отправлено на:', email);
           setSuccess(t('verifyEmail'));
           
