@@ -41,6 +41,8 @@ const translations = {
     fullSize: 'Полный размер',
     screenshot: 'Скриншот',
     sideAny: 'Любая',
+    grenadeName: 'Название гранаты:',
+    grenadeNamePlaceholder: 'Введите название',
   },
   en: {
     maps: 'Maps',
@@ -82,6 +84,8 @@ const translations = {
     fullSize: 'Full size',
     screenshot: 'Screenshot',
     sideAny: 'Any',
+    grenadeName: 'Grenade name:',
+    grenadeNamePlaceholder: 'Enter name',
   },
 };
 

@@ -53,6 +53,10 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   const [guideOpen, setGuideOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState(null);
   const [activeFilter, setActiveFilter] = useState(null);
+  const [imageZoom, setImageZoom] = useState(1);
+  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const mapRef = useRef(null);
   const { lang, t } = useLanguage();
 
@@ -144,7 +148,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
   const updateMarkers = (newMarkers) => { setMarkers(newMarkers); saveToFile(newMarkers); };
 
   const recalculateGroup = (markersArray, groupX, groupY, mapId) => {
-    const spacing = getSpacing(); // Убрал * 2
+    const spacing = getSpacing();
     const groupMembers = markersArray
       .filter(m => m.mapId === mapId && Math.abs(m.x - groupX) < 1.5 && Math.abs(m.y - groupY) < 1.5)
       .sort((a, b) => a.id - b.id);
@@ -484,7 +488,6 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
     return m.type === activeFilter;
   });
 
-  // Пересчитываем позиции при активном фильтре
   const filteredMarkers = activeFilter === null ? currentMarkers : (() => {
     const spacing = getSpacing();
     const grouped = {};
@@ -544,7 +547,6 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
       <main className="main">
         {loading ? <p style={{ color: '#a0aec0' }}>{t('loading')}</p> : (
           <div className="map-wrapper">
-            {/* Панель фильтров */}
             <div className="filter-panel">
               <button
                 className={`filter-btn ${activeFilter === null ? 'active' : ''}`}
@@ -702,6 +704,26 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                 </div>
                 {sidePanel.mode === 'edit' ? (
                   <>
+                    {/* Поле названия гранаты */}
+                    <div className="grenade-name-block">
+                      <p className="throw-type-label">{t('grenadeName')}</p>
+                      <input
+                        type="text"
+                        className="video-url-input"
+                        placeholder={t('grenadeNamePlaceholder')}
+                        value={sidePanel.marker.name || ''}
+                        onChange={(e) => {
+                          updateMarkers(markers.map(m =>
+                            m.id === sidePanel.marker.id ? { ...m, name: e.target.value } : m
+                          ));
+                          setSidePanel(prev => ({
+                            ...prev,
+                            marker: { ...prev.marker, name: e.target.value }
+                          }));
+                        }}
+                      />
+                    </div>
+
                     <div className="edit-video-block">
                       {sidePanel.marker.lineTo && <button className="delete-line-btn" onClick={handleDeleteLine}>{t('deleteTrajectory')}</button>}
                       {sidePanel.marker.videoUrl && <button className="delete-line-btn" onClick={handleDeleteVideo}>{t('deleteVideo')}</button>}
@@ -714,7 +736,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
 
                     {/* Блок изображений */}
                     <div className="images-block">
-                      <p className="throw-type-label">Изображения:</p>
+                      <p className="throw-type-label">{t('images')}</p>
 
                       <div className="video-url-block">
                         <input
@@ -746,7 +768,7 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                         <div className="images-gallery">
                           {sidePanel.marker.images.map((img, index) => (
                             <div key={index} className="image-item">
-                              <img src={img} alt={`Скриншот ${index + 1}`} className="gallery-image" onClick={() => setFullscreenImage(img)} />
+                              <img src={img} alt={`${t('screenshot')} ${index + 1}`} className="gallery-image" onClick={() => setFullscreenImage(img)} />
                               <button
                                 className="image-delete-btn"
                                 onClick={() => {
@@ -779,13 +801,20 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                   </>
                 ) : (
                   <>
+                    {/* Отображение названия в режиме просмотра */}
+                    {sidePanel.marker.name && (
+                      <div className="grenade-name-display">
+                        {sidePanel.marker.name}
+                      </div>
+                    )}
+
                     <div className="video-container">{sidePanel.marker.videoUrl ? <video src={sidePanel.marker.videoUrl} controls className="side-video" /> : <p className="no-video">{t('noVideo')}</p>}</div>
 
                     {sidePanel.marker.images && sidePanel.marker.images.length > 0 && (
                       <div className="images-gallery">
                         {sidePanel.marker.images.map((img, index) => (
                           <div key={index} className="image-item">
-                            <img src={img} alt={`Скриншот ${index + 1}`} className="gallery-image" onClick={() => setFullscreenImage(img)} />
+                            <img src={img} alt={`${t('screenshot')} ${index + 1}`} className="gallery-image" onClick={() => setFullscreenImage(img)} />
                           </div>
                         ))}
                       </div>
@@ -801,13 +830,114 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
         )}
 
         {fullscreenImage && (
-          <div className="modal-overlay" onClick={() => setFullscreenImage(null)}>
-            <img
-              src={fullscreenImage}
-              alt="Полный размер"
-              className="fullscreen-image"
+          <div
+            className="modal-overlay"
+            onClick={() => {
+              setFullscreenImage(null);
+              setImageZoom(1);
+              setImagePosition({ x: 0, y: 0 });
+            }}
+            onWheel={(e) => {
+              e.stopPropagation();
+              const delta = e.deltaY > 0 ? -0.1 : 0.1;
+              setImageZoom(prev => Math.min(Math.max(0.5, prev + delta), 5));
+            }}
+          >
+            <div
+              className="fullscreen-image-container"
               onClick={(e) => e.stopPropagation()}
-            />
+            >
+              <img
+                src={fullscreenImage}
+                alt="Полный размер"
+                className="fullscreen-image"
+                style={{
+                  transform: `translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${imageZoom})`,
+                  cursor: imageZoom > 1 ? (isDraggingImage ? 'grabbing' : 'grab') : 'default'
+                }}
+                onMouseDown={(e) => {
+                  if (imageZoom > 1) {
+                    e.preventDefault();
+                    setIsDraggingImage(true);
+                    setDragStart({
+                      x: e.clientX - imagePosition.x,
+                      y: e.clientY - imagePosition.y
+                    });
+                  }
+                }}
+                onMouseMove={(e) => {
+                  if (isDraggingImage) {
+                    setImagePosition({
+                      x: e.clientX - dragStart.x,
+                      y: e.clientY - dragStart.y
+                    });
+                  }
+                }}
+                onMouseUp={() => setIsDraggingImage(false)}
+                onMouseLeave={() => setIsDraggingImage(false)}
+                onTouchStart={(e) => {
+                  if (imageZoom > 1 && e.touches.length === 1) {
+                    setIsDraggingImage(true);
+                    setDragStart({
+                      x: e.touches[0].clientX - imagePosition.x,
+                      y: e.touches[0].clientY - imagePosition.y
+                    });
+                  }
+                }}
+                onTouchMove={(e) => {
+                  if (isDraggingImage && e.touches.length === 1) {
+                    setImagePosition({
+                      x: e.touches[0].clientX - dragStart.x,
+                      y: e.touches[0].clientY - dragStart.y
+                    });
+                  }
+                }}
+                onTouchEnd={() => setIsDraggingImage(false)}
+                draggable="false"
+              />
+
+              <div className="zoom-controls">
+                <button
+                  className="zoom-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setImageZoom(prev => Math.min(prev + 0.2, 5));
+                  }}
+                >
+                  +
+                </button>
+                <button
+                  className="zoom-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setImageZoom(prev => Math.max(prev - 0.2, 0.5));
+                  }}
+                >
+                  −
+                </button>
+                <button
+                  className="zoom-btn zoom-reset"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setImageZoom(1);
+                    setImagePosition({ x: 0, y: 0 });
+                  }}
+                >
+                  ↺
+                </button>
+              </div>
+
+              <button
+                className="fullscreen-close"
+                onClick={() => {
+                  setFullscreenImage(null);
+                  setImageZoom(1);
+                  setImagePosition({ x: 0, y: 0 });
+                }}
+              >
+                ✕
+              </button>
+            </div>
           </div>
         )}
 
