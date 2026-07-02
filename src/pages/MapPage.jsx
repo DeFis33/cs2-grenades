@@ -695,143 +695,135 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
               })}
             </div>
 
-            {sidePanel && (
-              <div className="side-panel" onClick={e => e.stopPropagation()}>
-                <button className="side-panel-close" onClick={() => setSidePanel(null)}>✕</button>
-                <div className="side-panel-type">
-                  <img src={granadeTypes.find(g => g.type === sidePanel.marker.type)?.icon} alt="" className="side-panel-type-icon" />
-                  <span>{granadeTypes.find(g => g.type === sidePanel.marker.type)?.type}</span>
+{sidePanel && (
+  <div className="side-panel" onClick={e => e.stopPropagation()}>
+    <button className="side-panel-close" onClick={() => setSidePanel(null)}>✕</button>
+    <div className="side-panel-type">
+      <img src={granadeTypes.find(g => g.type === sidePanel.marker.type)?.icon} alt="" className="side-panel-type-icon" />
+      <span>{sidePanel.marker.name || granadeTypes.find(g => g.type === sidePanel.marker.type)?.type}</span>
+    </div>
+    {sidePanel.mode === 'edit' ? (
+      <>
+        <div className="throw-type-block">
+          <p className="throw-type-label">{t('grenadeName')}</p>
+          <input
+            type="text"
+            className="video-url-input"
+            placeholder={t('grenadeNamePlaceholder')}
+            defaultValue={sidePanel.marker.name || ''}
+            onBlur={(e) => {
+              const newName = e.target.value;
+              updateMarkers(markers.map(m => 
+                m.id === sidePanel.marker.id ? { ...m, name: newName } : m
+              ));
+              setSidePanel(prev => ({ 
+                ...prev, 
+                marker: { ...prev.marker, name: newName } 
+              }));
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.target.blur();
+              }
+            }}
+          />
+        </div>
+
+        <div className="edit-video-block">
+          {sidePanel.marker.lineTo && <button className="delete-line-btn" onClick={handleDeleteLine}>{t('deleteTrajectory')}</button>}
+          {sidePanel.marker.videoUrl && <button className="delete-line-btn" onClick={handleDeleteVideo}>{t('deleteVideo')}</button>}
+        </div>
+        {sidePanel.marker.videoUrl ? (
+          <div className="video-loaded-block"><video src={sidePanel.marker.videoUrl} controls className="side-video" /></div>
+        ) : (
+          <div className="video-url-block"><input type="text" className="video-url-input" placeholder={t('videoPlaceholder')} value={sidePanel.marker.videoUrl || ''} onChange={(e) => { updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, videoUrl: e.target.value } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, videoUrl: e.target.value } })); }} /></div>
+        )}
+
+        <div className="images-block">
+          <p className="throw-type-label">{t('images')}</p>
+
+          <div className="video-url-block">
+            <input
+              type="text"
+              className="video-url-input"
+              placeholder={t('imagePlaceholder')}
+              value={sidePanel.marker.newImageUrl || ''}
+              onChange={(e) => {
+                const url = e.target.value;
+                const updatedMarker = { ...sidePanel.marker, newImageUrl: url };
+
+                if (url && url.startsWith('http')) {
+                  updatedMarker.images = [...(sidePanel.marker.images || []), url];
+                  updatedMarker.newImageUrl = '';
+                }
+
+                setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
+
+                if (updatedMarker.images.length > (sidePanel.marker.images || []).length) {
+                  updateMarkers(markers.map(m =>
+                    m.id === sidePanel.marker.id ? updatedMarker : m
+                  ));
+                }
+              }}
+            />
+          </div>
+
+          {sidePanel.marker.images && sidePanel.marker.images.length > 0 && (
+            <div className="images-gallery">
+              {sidePanel.marker.images.map((img, index) => (
+                <div key={index} className="image-item">
+                  <img src={img} alt={`${t('screenshot')} ${index + 1}`} className="gallery-image" onClick={() => setFullscreenImage(img)} />
+                  <button
+                    className="image-delete-btn"
+                    onClick={() => {
+                      const updatedImages = sidePanel.marker.images.filter((_, i) => i !== index);
+                      const updatedMarker = { ...sidePanel.marker, images: updatedImages };
+                      updateMarkers(markers.map(m =>
+                        m.id === sidePanel.marker.id ? updatedMarker : m
+                      ));
+                      setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
+                    }}
+                  >
+                    ✕
+                  </button>
                 </div>
-                {sidePanel.mode === 'edit' ? (
-                  <>
-                    {/* Поле названия гранаты */}
-                    <div className="grenade-name-block">
-                      <p className="throw-type-label">{t('grenadeName')}</p>
-                      <input
-                        type="text"
-                        className="video-url-input"
-                        placeholder={t('grenadeNamePlaceholder')}
-                        defaultValue={sidePanel.marker.name || ''}
-                        onBlur={(e) => {
-                          const newName = e.target.value;
-                          updateMarkers(markers.map(m =>
-                            m.id === sidePanel.marker.id ? { ...m, name: newName } : m
-                          ));
-                          setSidePanel(prev => ({
-                            ...prev,
-                            marker: { ...prev.marker, name: newName }
-                          }));
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.target.blur();
-                          }
-                        }}
-                      />
-                    </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-                    <div className="edit-video-block">
-                      {sidePanel.marker.lineTo && <button className="delete-line-btn" onClick={handleDeleteLine}>{t('deleteTrajectory')}</button>}
-                      {sidePanel.marker.videoUrl && <button className="delete-line-btn" onClick={handleDeleteVideo}>{t('deleteVideo')}</button>}
-                    </div>
-                    {sidePanel.marker.videoUrl ? (
-                      <div className="video-loaded-block"><video src={sidePanel.marker.videoUrl} controls className="side-video" /></div>
-                    ) : (
-                      <div className="video-url-block"><input type="text" className="video-url-input" placeholder={t('videoPlaceholder')} value={sidePanel.marker.videoUrl || ''} onChange={(e) => { updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, videoUrl: e.target.value } : m)); setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, videoUrl: e.target.value } })); }} /></div>
-                    )}
+        <div className="throw-type-block">
+          <p className="throw-type-label">{t('throwType')}</p>
+          <select className="throw-type-select" value={sidePanel.marker.throwType || ''} onChange={(e) => handleThrowTypeChange(e.target.value)}>{throwTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
+        </div>
+        <div className="throw-type-block">
+          <p className="throw-type-label">{t('side')}</p>
+          <div className="side-buttons">{sideTypes.filter(s => s.value !== '').map(s => (
+            <button key={s.value} className={`side-btn ${sidePanel.marker.side === s.value ? 'active' : ''}`} onClick={() => handleSideChange(sidePanel.marker.side === s.value ? '' : s.value)}><img src={s.icon} alt={s.label} className="side-btn-icon" /></button>
+          ))}</div>
+        </div>
+      </>
+    ) : (
+      <>
+        <div className="video-container">{sidePanel.marker.videoUrl ? <video src={sidePanel.marker.videoUrl} controls className="side-video" /> : <p className="no-video">{t('noVideo')}</p>}</div>
 
-                    {/* Блок изображений */}
-                    <div className="images-block">
-                      <p className="throw-type-label">{t('images')}</p>
-
-                      <div className="video-url-block">
-                        <input
-                          type="text"
-                          className="video-url-input"
-                          placeholder={t('imagePlaceholder')}
-                          value={sidePanel.marker.newImageUrl || ''}
-                          onChange={(e) => {
-                            const url = e.target.value;
-                            const updatedMarker = { ...sidePanel.marker, newImageUrl: url };
-
-                            if (url && url.startsWith('http')) {
-                              updatedMarker.images = [...(sidePanel.marker.images || []), url];
-                              updatedMarker.newImageUrl = '';
-                            }
-
-                            setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
-
-                            if (updatedMarker.images.length > (sidePanel.marker.images || []).length) {
-                              updateMarkers(markers.map(m =>
-                                m.id === sidePanel.marker.id ? updatedMarker : m
-                              ));
-                            }
-                          }}
-                        />
-                      </div>
-
-                      {sidePanel.marker.images && sidePanel.marker.images.length > 0 && (
-                        <div className="images-gallery">
-                          {sidePanel.marker.images.map((img, index) => (
-                            <div key={index} className="image-item">
-                              <img src={img} alt={`${t('screenshot')} ${index + 1}`} className="gallery-image" onClick={() => setFullscreenImage(img)} />
-                              <button
-                                className="image-delete-btn"
-                                onClick={() => {
-                                  const updatedImages = sidePanel.marker.images.filter((_, i) => i !== index);
-                                  const updatedMarker = { ...sidePanel.marker, images: updatedImages };
-                                  updateMarkers(markers.map(m =>
-                                    m.id === sidePanel.marker.id ? updatedMarker : m
-                                  ));
-                                  setSidePanel(prev => ({ ...prev, marker: updatedMarker }));
-                                }}
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="throw-type-block">
-                      <p className="throw-type-label">{t('throwType')}</p>
-                      <select className="throw-type-select" value={sidePanel.marker.throwType || ''} onChange={(e) => handleThrowTypeChange(e.target.value)}>{throwTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
-                    </div>
-                    <div className="throw-type-block">
-                      <p className="throw-type-label">{t('side')}</p>
-                      <div className="side-buttons">{sideTypes.filter(s => s.value !== '').map(s => (
-                        <button key={s.value} className={`side-btn ${sidePanel.marker.side === s.value ? 'active' : ''}`} onClick={() => handleSideChange(sidePanel.marker.side === s.value ? '' : s.value)}><img src={s.icon} alt={s.label} className="side-btn-icon" /></button>
-                      ))}</div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {/* Отображение названия в режиме просмотра */}
-                    {sidePanel.marker.name && (
-                      <div className="grenade-name-display">
-                        {sidePanel.marker.name}
-                      </div>
-                    )}
-
-                    <div className="video-container">{sidePanel.marker.videoUrl ? <video src={sidePanel.marker.videoUrl} controls className="side-video" /> : <p className="no-video">{t('noVideo')}</p>}</div>
-
-                    {sidePanel.marker.images && sidePanel.marker.images.length > 0 && (
-                      <div className="images-gallery">
-                        {sidePanel.marker.images.map((img, index) => (
-                          <div key={index} className="image-item">
-                            <img src={img} alt={`${t('screenshot')} ${index + 1}`} className="gallery-image" onClick={() => setFullscreenImage(img)} />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {sidePanel.marker.throwType && <div className="throw-type-display">{t('throwType')} {throwTypes.find(t => t.value === sidePanel.marker.throwType)?.label}</div>}
-                    {sidePanel.marker.side && <div className="side-display"><span className="side-display-label">{t('side')}</span><img src={sideTypes.find(s => s.value === sidePanel.marker.side)?.icon} alt="" className="side-display-icon" /></div>}
-                  </>
-                )}
+        {sidePanel.marker.images && sidePanel.marker.images.length > 0 && (
+          <div className="images-gallery">
+            {sidePanel.marker.images.map((img, index) => (
+              <div key={index} className="image-item">
+                <img src={img} alt={`${t('screenshot')} ${index + 1}`} className="gallery-image" onClick={() => setFullscreenImage(img)} />
               </div>
-            )}
+            ))}
+          </div>
+        )}
+
+        {sidePanel.marker.throwType && <div className="throw-type-display">{t('throwType')} {throwTypes.find(t => t.value === sidePanel.marker.throwType)?.label}</div>}
+        {sidePanel.marker.side && <div className="side-display"><span className="side-display-label">{t('side')}</span><img src={sideTypes.find(s => s.value === sidePanel.marker.side)?.icon} alt="" className="side-display-icon" /></div>}
+      </>
+    )}
+  </div>
+)}
+
           </div>
         )}
 
