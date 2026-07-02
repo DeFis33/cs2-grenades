@@ -109,8 +109,7 @@ function AuthModal({ onClose }) {
             } else {
                 const result = await createUserWithEmailAndPassword(auth, email, password);
                 await sendEmailVerification(result.user);
-                setSuccessMessage(t('verifyEmail'));
-                setIsLogin(true);
+                onClose(); // Закрываем модалку после регистрации
             }
         } catch (err) {
             setError(getErrorMessage(err.code));
@@ -164,11 +163,6 @@ function AuthModal({ onClose }) {
                     </button>
                 </form>
 
-                {error === t('emailNotVerified') && (
-                    <p className="auth-switch" onClick={handleResendVerification}>
-                        {t('resendVerification')}
-                    </p>
-                )}
                 <p className="auth-switch" onClick={() => { setIsLogin(!isLogin); setError(''); setSuccessMessage(''); }}>
                     {isLogin ? t('noAccount') : t('haveAccount')}
                 </p>
