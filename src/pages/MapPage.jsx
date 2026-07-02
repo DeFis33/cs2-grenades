@@ -60,13 +60,6 @@ function MapPage({ user, onLogout }) {
 
   const isAdmin = user && user.email === ADMIN_EMAIL;
 
-  console.log('=== DEBUG ===');
-  console.log('VITE_ADMIN_EMAIL raw:', import.meta.env.VITE_ADMIN_EMAIL);
-  console.log('ADMIN_EMAIL decoded:', ADMIN_EMAIL);
-  console.log('user.email:', user?.email);
-  console.log('isAdmin:', isAdmin);
-  console.log('=============');
-
   const imageName = `${selectedMap}.png`;
 
   const getSpacing = () => window.innerWidth <= 768 ? 6 : 5;
