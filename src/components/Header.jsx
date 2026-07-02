@@ -11,7 +11,7 @@ const languages = [
   { code: 'ru', label: 'RU' },
 ];
 
-function Header({ user, guideOpen, setGuideOpen, onLogout, onUserClick }) {
+function Header({ user, isAdmin, guideOpen, setGuideOpen, onLogout, onUserClick }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const location = useLocation();
@@ -73,7 +73,7 @@ function Header({ user, guideOpen, setGuideOpen, onLogout, onUserClick }) {
             )}
           </div>
 
-          {user && !isHome && (
+          {isAdmin && !isHome && (
             <div className={`guide-container ${guideOpen ? 'active' : ''}`}>
               <button
                 className="guide-icon-btn"

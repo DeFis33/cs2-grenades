@@ -8,6 +8,7 @@ import { useLanguage } from '../context/LanguageContext';
 const GIST_ID = '8f1c7f4ee430dd9bf0c317a782938d5b';
 const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN;
 const MARKERS_URL = `https://api.github.com/gists/${GIST_ID}`;
+const ADMIN_EMAIL = atob(import.meta.env.VITE_ADMIN_EMAIL || '');
 
 const granadeTypes = [
   { type: 'smoke', icon: '/icons/smoke.png' },
@@ -35,7 +36,7 @@ const maps = [
   { id: 'dust2', name: 'Dust 2' },
 ];
 
-function MapPage({ user, onLogout, onRegister, onLogin }) {
+function MapPage({ user, onLogout }) {
   const { mapId } = useParams();
   const selectedMap = mapId;
   const [markers, setMarkers] = useState([]);
@@ -56,6 +57,15 @@ function MapPage({ user, onLogout, onRegister, onLogin }) {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const mapRef = useRef(null);
   const { lang, t } = useLanguage();
+
+  const isAdmin = user && user.email === ADMIN_EMAIL;
+
+  console.log('=== DEBUG ===');
+  console.log('VITE_ADMIN_EMAIL raw:', import.meta.env.VITE_ADMIN_EMAIL);
+  console.log('ADMIN_EMAIL decoded:', ADMIN_EMAIL);
+  console.log('user.email:', user?.email);
+  console.log('isAdmin:', isAdmin);
+  console.log('=============');
 
   const imageName = `${selectedMap}.png`;
 
@@ -174,7 +184,7 @@ function MapPage({ user, onLogout, onRegister, onLogin }) {
 
   const handleMapClick = (e) => {
     if (expandedGroup) { collapseGroup(expandedGroup); setExpandedGroup(null); }
-    if (!user || !selectedMap) return;
+    if (!isAdmin || !selectedMap) return;
     if (e.target.closest('circle')) return;
 
     if (drawingLine) {
@@ -224,7 +234,7 @@ function MapPage({ user, onLogout, onRegister, onLogin }) {
   };
 
   const handleMarkerRightClick = (e, markerId) => {
-    if (!user) return;
+    if (!isAdmin) return;
     e.preventDefault(); e.stopPropagation();
     const deleted = markers.find(m => m.id === markerId);
     if (!deleted) return;
@@ -239,14 +249,14 @@ function MapPage({ user, onLogout, onRegister, onLogin }) {
     if (e.defaultPrevented) return;
     setGranadeMenu(null);
     if (wasDragging) { setWasDragging(false); return; }
-    if (user && e.ctrlKey) { setGranadeMenu({ x: marker.x, y: marker.y }); setSidePanel(null); setDrawingLine(null); return; }
-    if (user && e.shiftKey) { setDrawingLine({ markerId: marker.id, fromX: marker.x, fromY: marker.y }); setSidePanel(null); setExpandedGroup(null); return; }
-    if (user) setSidePanel({ marker, mode: 'edit' });
-    else if (marker.videoUrl || (marker.images && marker.images.length > 0) || marker.throwType || marker.side || marker.name) setSidePanel({ marker, mode: 'view' });
+    if (isAdmin && e.ctrlKey) { setGranadeMenu({ x: marker.x, y: marker.y }); setSidePanel(null); setDrawingLine(null); return; }
+    if (isAdmin && e.shiftKey) { setDrawingLine({ markerId: marker.id, fromX: marker.x, fromY: marker.y }); setSidePanel(null); setExpandedGroup(null); return; }
+    if (isAdmin) setSidePanel({ marker, mode: 'edit' });
+    else setSidePanel({ marker, mode: 'view' });
   };
 
   const handleMarkerMouseDown = (e, marker) => {
-    if (!user) return;
+    if (!isAdmin) return;
     e.preventDefault();
     e.stopPropagation();
 
@@ -334,7 +344,7 @@ function MapPage({ user, onLogout, onRegister, onLogin }) {
   };
 
   const handleGroupMouseDown = (e, groupKey) => {
-    if (!user) return;
+    if (!isAdmin) return;
 
     const isTouch = e.type === 'touchstart';
     e.stopPropagation();
@@ -399,7 +409,7 @@ function MapPage({ user, onLogout, onRegister, onLogin }) {
 
   const handleGroupClick = (e, groupKey) => {
     e.stopPropagation();
-    if (user && e.ctrlKey) { const [gx, gy] = groupKey.split(',').map(Number); setGranadeMenu({ x: gx, y: gy }); setSidePanel(null); setDrawingLine(null); setExpandedGroup(null); return; }
+    if (isAdmin && e.ctrlKey) { const [gx, gy] = groupKey.split(',').map(Number); setGranadeMenu({ x: gx, y: gy }); setSidePanel(null); setDrawingLine(null); setExpandedGroup(null); return; }
     const [gx, gy] = groupKey.split(',').map(Number);
     if (expandedGroup !== groupKey) { const expanded = recalculateGroup(markers, gx, gy, selectedMap); updateMarkers(expanded); setExpandedGroup(groupKey); }
     else { collapseGroup(groupKey); setExpandedGroup(null); }
@@ -410,7 +420,7 @@ function MapPage({ user, onLogout, onRegister, onLogin }) {
   const handleMarkerLeave = () => setHoveredMarker(null);
 
   const handleBendMouseDown = (e, marker) => {
-    if (!user) return;
+    if (!isAdmin) return;
     e.stopPropagation();
     e.preventDefault();
 
@@ -512,6 +522,7 @@ function MapPage({ user, onLogout, onRegister, onLogin }) {
 
       <Header
         user={user}
+        isAdmin={isAdmin}
         guideOpen={guideOpen}
         setGuideOpen={setGuideOpen}
         onLogout={onLogout}
@@ -519,11 +530,7 @@ function MapPage({ user, onLogout, onRegister, onLogin }) {
       />
 
       {showAuth && (
-        <AuthModal
-          onClose={() => setShowAuth(false)}
-          onRegister={onRegister}
-          onLogin={onLogin}
-        />
+        <AuthModal onClose={() => setShowAuth(false)} />
       )}
 
       <main className="main">
@@ -558,8 +565,8 @@ function MapPage({ user, onLogout, onRegister, onLogin }) {
                   const isHovered = hoveredMarker?.id === marker.id;
                   const isDrawing = drawingLine?.markerId === marker.id;
 
-                  if (user && hoveredMarker && !isHovered && !isDrawing) return null;
-                  if (!user && !isHovered && !isDrawing) return null;
+                  if (isAdmin && hoveredMarker && !isHovered && !isDrawing) return null;
+                  if (!isAdmin && !isHovered && !isDrawing) return null;
 
                   const group = Object.values(groupedMarkers).find(g => g.some(m => m.id === marker.id));
                   let ex = (marker.displayX || marker.x) * 8;
@@ -588,7 +595,7 @@ function MapPage({ user, onLogout, onRegister, onLogin }) {
                       <line x1={sx} y1={sy} x2={mx} y2={my} stroke="white" strokeWidth="2" strokeDasharray="6,3" style={{ pointerEvents: 'none' }} />
                       <line x1={mx} y1={my} x2={ex} y2={ey} stroke="white" strokeWidth="2" strokeDasharray="6,3" style={{ pointerEvents: 'none' }} />
                       <circle cx={sx} cy={sy} r="5" fill="white" opacity="0.9" style={{ pointerEvents: 'none' }} />
-                      {user && marker.lineTo && (
+                      {isAdmin && marker.lineTo && (
                         <circle
                           cx={mx}
                           cy={my}
@@ -663,7 +670,7 @@ function MapPage({ user, onLogout, onRegister, onLogin }) {
                     ) : (
                       <div
                         className="marker group-marker"
-                        style={{ left: `${gx}%`, top: `${gy}%`, cursor: user ? 'move' : 'pointer' }}
+                        style={{ left: `${gx}%`, top: `${gy}%`, cursor: isAdmin ? 'move' : 'pointer' }}
                         onClick={(e) => handleGroupClick(e, key)}
                         onMouseDown={(e) => handleGroupMouseDown(e, key)}
                         onTouchStart={(e) => handleGroupMouseDown(e, key)}
@@ -920,7 +927,7 @@ function MapPage({ user, onLogout, onRegister, onLogin }) {
           </div>
         )}
 
-        {user && sidePanel?.marker && (
+        {isAdmin && sidePanel?.marker && (
           <div className="mobile-tools">
             <button
               className="mobile-tool-btn"
