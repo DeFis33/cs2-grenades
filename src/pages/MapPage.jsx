@@ -711,15 +711,21 @@ function MapPage({ editMode, onLoginSuccess, onLogout }) {
                         type="text"
                         className="video-url-input"
                         placeholder={t('grenadeNamePlaceholder')}
-                        value={sidePanel.marker.name || ''}
-                        onChange={(e) => {
+                        defaultValue={sidePanel.marker.name || ''}
+                        onBlur={(e) => {
+                          const newName = e.target.value;
                           updateMarkers(markers.map(m =>
-                            m.id === sidePanel.marker.id ? { ...m, name: e.target.value } : m
+                            m.id === sidePanel.marker.id ? { ...m, name: newName } : m
                           ));
                           setSidePanel(prev => ({
                             ...prev,
-                            marker: { ...prev.marker, name: e.target.value }
+                            marker: { ...prev.marker, name: newName }
                           }));
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.target.blur();
+                          }
                         }}
                       />
                     </div>
