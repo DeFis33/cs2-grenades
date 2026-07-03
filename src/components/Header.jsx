@@ -12,7 +12,7 @@ function Header({ isAdmin = false, guideOpen, setGuideOpen, onAdminLogin, onAdmi
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
-    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
+    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
 
     if (password === adminPassword) {
       setShowPasswordModal(false);

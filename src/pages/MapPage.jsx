@@ -676,6 +676,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                     <div className="throw-type-block">
                       <p className="throw-type-label">{t('grenadeName')}</p>
                       <input
+                        key={sidePanel.marker.id}
                         type="text"
                         className="video-url-input"
                         placeholder={t('grenadeNamePlaceholder')}
