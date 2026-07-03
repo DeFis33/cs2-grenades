@@ -7,13 +7,20 @@ import MapPage from './pages/MapPage';
 import './App.css';
 
 function App() {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(() => {
+    return localStorage.getItem('isAdmin') === 'true';
+  });
   const [guideOpen, setGuideOpen] = useState(false);
 
-  const handleAdminLogin = () => setIsAdmin(true);
+  const handleAdminLogin = () => {
+    setIsAdmin(true);
+    localStorage.setItem('isAdmin', 'true');
+  };
+
   const handleAdminLogout = () => {
     setIsAdmin(false);
     setGuideOpen(false);
+    localStorage.removeItem('isAdmin');
   };
 
   return (
