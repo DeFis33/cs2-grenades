@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 
-function Header({ isAdmin, guideOpen, setGuideOpen }) {
+function Header({ isAdmin = false, guideOpen, setGuideOpen }) {
   const { lang, setLang, t } = useLanguage();
   const [showMaps, setShowMaps] = useState(false);
   const [showLang, setShowLang] = useState(false);
@@ -37,31 +37,33 @@ function Header({ isAdmin, guideOpen, setGuideOpen }) {
             )}
           </div>
 
-          <div className="guide-container active">
-            <button
-              className="guide-icon-btn"
-              onClick={() => setGuideOpen && setGuideOpen(!guideOpen)}
-            >
-              <img src="/icons/guide.png" alt="Guide" className="guide-icon-img" />
-            </button>
-            <div className="guide-dropdown" style={{ display: guideOpen ? 'block' : 'none' }}>
-              <div className="guide-dropdown-inner">
-                <div className="guide-title">{t('guide')}</div>
-                <div className="guide-item guide-desktop">🖱️ {t('guideClickMap')}</div>
-                <div className="guide-item guide-desktop">🖱️ {t('guideClickMarker')}</div>
-                <div className="guide-item guide-desktop"><kbd>Ctrl</kbd> + 🖱️ {t('guideCtrl')}</div>
-                <div className="guide-item guide-desktop"><kbd>Shift</kbd> + {t('guideShiftMarker')}</div>
-                <div className="guide-item guide-desktop"><kbd>Shift</kbd> + {t('guideShiftMap')}</div>
-                <div className="guide-item guide-desktop">🖱️ {t('guideRightClick')}</div>
-                <div className="guide-item guide-desktop">🖱️ {t('guideGroupClick')}</div>
-                <div className="guide-item guide-desktop">🖱️ {t('guideDrag')}</div>
-                <div className="guide-item guide-mobile">👆 {t('guideClickMap')}</div>
-                <div className="guide-item guide-mobile">👆 {t('guideClickMarker')}</div>
-                <div className="guide-item guide-mobile">👆 {t('guideMobileGroupDrag')}</div>
-                <div className="guide-item guide-mobile">👆 {t('guideMobileTrajectory')}</div>
+          {setGuideOpen && (
+            <div className="guide-container active">
+              <button
+                className="guide-icon-btn"
+                onClick={() => setGuideOpen(!guideOpen)}
+              >
+                <img src="/icons/guide.png" alt="Guide" className="guide-icon-img" />
+              </button>
+              <div className="guide-dropdown" style={{ display: guideOpen ? 'block' : 'none' }}>
+                <div className="guide-dropdown-inner">
+                  <div className="guide-title">{t('guide')}</div>
+                  <div className="guide-item guide-desktop">🖱️ {t('guideClickMap')}</div>
+                  <div className="guide-item guide-desktop">🖱️ {t('guideClickMarker')}</div>
+                  <div className="guide-item guide-desktop"><kbd>Ctrl</kbd> + 🖱️ {t('guideCtrl')}</div>
+                  <div className="guide-item guide-desktop"><kbd>Shift</kbd> + {t('guideShiftMarker')}</div>
+                  <div className="guide-item guide-desktop"><kbd>Shift</kbd> + {t('guideShiftMap')}</div>
+                  <div className="guide-item guide-desktop">🖱️ {t('guideRightClick')}</div>
+                  <div className="guide-item guide-desktop">🖱️ {t('guideGroupClick')}</div>
+                  <div className="guide-item guide-desktop">🖱️ {t('guideDrag')}</div>
+                  <div className="guide-item guide-mobile">👆 {t('guideClickMap')}</div>
+                  <div className="guide-item guide-mobile">👆 {t('guideClickMarker')}</div>
+                  <div className="guide-item guide-mobile">👆 {t('guideMobileGroupDrag')}</div>
+                  <div className="guide-item guide-mobile">👆 {t('guideMobileTrajectory')}</div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {isAdmin && (
             <div className="edit-icon-btn active" title={t('editor')}>
