@@ -921,14 +921,14 @@ ul, li {
 
 .filter-panel {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;  /* меняем с row на column */
   gap: 8px;
   padding: 8px;
   background-color: #1a1a2e;
   border-radius: 10px;
   height: fit-content;
   position: absolute;
-  left: -250px;
+  left: -70px;  /* уменьшаем отступ, так как панель стала уже */
   top: 0;
 }
 
@@ -1235,4 +1235,23 @@ ul, li {
 
 .grenade-name-block {
   margin-top: 16px;
+}
+
+.filter-divider {
+  width: 100%;  /* меняем с 2px на 100% */
+  height: 2px;  /* меняем с auto на 2px */
+  background-color: #4a5568;
+  margin: 4px 0;  /* меняем отступы */
+  align-self: stretch;
+}
+
+@media (max-width: 768px) {
+  .filter-panel {
+    flex-direction: column;  /* оставляем column */
+    margin-right: 0;
+    margin-bottom: 8px;
+    position: static;
+    width: 100%;
+    justify-content: center;
+  }
 }

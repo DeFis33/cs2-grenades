@@ -47,6 +47,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
   const [expandedGroup, setExpandedGroup] = useState(null);
   const [fullscreenImage, setFullscreenImage] = useState(null);
   const [activeFilter, setActiveFilter] = useState(null);
+  const [sideFilter, setSideFilter] = useState(null);
   const [imageZoom, setImageZoom] = useState(1);
   const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
   const [isDraggingImage, setIsDraggingImage] = useState(false);
@@ -465,11 +466,15 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
 
   const currentMarkers = markers.filter(m => {
     if (m.mapId !== selectedMap) return false;
-    if (activeFilter === null) return true;
-    return m.type === activeFilter;
+    if (activeFilter === null && sideFilter === null) return true;
+
+    const typeMatch = activeFilter === null || m.type === activeFilter;
+    const sideMatch = sideFilter === null || m.side === sideFilter;
+
+    return typeMatch && sideMatch;
   });
 
-  const filteredMarkers = activeFilter === null ? currentMarkers : (() => {
+  const filteredMarkers = activeFilter === null && sideFilter === null ? currentMarkers : (() => {
     const spacing = getSpacing();
     const grouped = {};
 
@@ -518,8 +523,8 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
           <div className="map-wrapper">
             <div className="filter-panel">
               <button
-                className={`filter-btn ${activeFilter === null ? 'active' : ''}`}
-                onClick={() => setActiveFilter(null)}
+                className={`filter-btn ${activeFilter === null && sideFilter === null ? 'active' : ''}`}
+                onClick={() => { setActiveFilter(null); setSideFilter(null); }}
                 title={t('all')}
               >
                 {t('all')}
@@ -534,6 +539,21 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                   <img src={g.icon} alt={g.type} className="filter-icon" />
                 </button>
               ))}
+              <div className="filter-divider"></div>
+              <button
+                className={`filter-btn side-filter-btn ${sideFilter === 'ct' ? 'active' : ''}`}
+                onClick={() => setSideFilter(sideFilter === 'ct' ? null : 'ct')}
+                title="CT"
+              >
+                <img src="/icons/side-ct.png" alt="CT" className="filter-icon" />
+              </button>
+              <button
+                className={`filter-btn side-filter-btn ${sideFilter === 't' ? 'active' : ''}`}
+                onClick={() => setSideFilter(sideFilter === 't' ? null : 't')}
+                title="T"
+              >
+                <img src="/icons/side-t.png" alt="T" className="filter-icon" />
+              </button>
             </div>
             <div className="map-container" onClick={handleMapClick} ref={mapRef}>
               <img src={`/maps/${imageName}`} alt={selectedMap} className="map-image" />
