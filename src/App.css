@@ -921,15 +921,30 @@ ul, li {
 
 .filter-panel {
   display: flex;
-  flex-direction: column;  /* меняем с row на column */
+  flex-direction: column;
   gap: 8px;
   padding: 8px;
   background-color: #1a1a2e;
   border-radius: 10px;
   height: fit-content;
   position: absolute;
-  left: -70px;  /* уменьшаем отступ, так как панель стала уже */
+  left: -70px;
   top: 0;
+}
+
+.filter-grenades-row {
+  display: contents;
+}
+
+.filter-sides-row {
+  display: contents;
+}
+
+.filter-divider {
+  width: 100%;
+  height: 2px;
+  background-color: #4a5568;
+  margin: 4px 0;
 }
 
 .filter-btn {
@@ -1071,10 +1086,15 @@ ul, li {
   background-color: rgba(233, 69, 96, 0.15);
 }
 
+.grenade-name-block {
+  margin-top: 16px;
+}
+
 @media (max-width: 1024px) {
   .map-container { width: 100%; max-width: 100%; }
   .main { padding: 10px; align-items: flex-start; }
   .map-wrapper { width: 100%; flex-direction: column; align-items: center; }
+  .map-container { order: 1; }
   .map-image { border-radius: 8px; max-height: calc(100vh - 76px); object-fit: contain; }
   .side-panel {
     position: relative;
@@ -1083,6 +1103,10 @@ ul, li {
     border-radius: 12px;
     margin-top: 10px;
     padding: 20px 16px;
+    order: 3;
+  }
+  .filter-panel {
+    order: 2;
   }
 }
 
@@ -1091,8 +1115,8 @@ ul, li {
   .header-logo-img { width: 140px; }
 
   .main { padding: 8px; padding-top: 20px; align-items: flex-start; }
-  .map-wrapper { width: 100%; flex-direction: column; align-items: center; }
-  .map-container { width: 100%; }
+  .map-wrapper { flex-direction: column; align-items: center; }
+  .map-container { width: 100%; order: 1; }
   .map-image { border-radius: 8px; max-height: calc(100vh - 68px); object-fit: contain; }
   .side-panel {
     position: relative;
@@ -1101,6 +1125,7 @@ ul, li {
     border-radius: 12px;
     margin-top: 10px;
     padding: 16px 12px;
+    order: 3;
   }
   .marker { width: 24px; height: 24px; }
   .marker-icon-img { width: 16px; height: 16px; }
@@ -1150,12 +1175,34 @@ ul, li {
   .gallery-image { height: 80px; }
 
   .filter-panel {
-    flex-direction: row;
-    margin-right: 0;
-    margin-bottom: 8px;
     position: static;
     width: 100%;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+    margin-bottom: 0;
+    order: 2;
+  }
+
+  .filter-grenades-row {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
     justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .filter-sides-row {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .filter-divider {
+    width: 100%;
+    height: 2px;
+    margin: 4px 0;
   }
 
   .zoom-controls {
@@ -1209,49 +1256,9 @@ ul, li {
   .guide-container.active .guide-dropdown { display: block; }
 }
 
-.fullscreen-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background-color: #1a1a2e !important;
-  color: white;
-  border: 2px solid #4a5568;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  z-index: 10002;
-  transition: border-color 0.2s, background-color 0.2s;
-}
-
-.fullscreen-close:hover {
-  border-color: #e94560;
-  background-color: #1a1a2e !important;
-}
-
-.grenade-name-block {
-  margin-top: 16px;
-}
-
-.filter-divider {
-  width: 100%;  /* меняем с 2px на 100% */
-  height: 2px;  /* меняем с auto на 2px */
-  background-color: #4a5568;
-  margin: 4px 0;  /* меняем отступы */
-  align-self: stretch;
-}
-
-@media (max-width: 768px) {
-  .filter-panel {
-    flex-direction: column;  /* оставляем column */
-    margin-right: 0;
-    margin-bottom: 8px;
-    position: static;
-    width: 100%;
-    justify-content: center;
-  }
+@media (hover: none) and (pointer: coarse) {
+  .marker:hover { transform: translate(-50%, -50%) scale(1); }
+  .granade-option:hover { transform: none; }
+  .guide-container:hover .guide-dropdown { display: none; }
+  .guide-container.active .guide-dropdown { display: block; }
 }

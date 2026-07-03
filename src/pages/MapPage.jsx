@@ -522,38 +522,42 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
         {loading ? <p style={{ color: '#a0aec0' }}>{t('loading')}</p> : (
           <div className="map-wrapper">
             <div className="filter-panel">
-              <button
-                className={`filter-btn ${activeFilter === null && sideFilter === null ? 'active' : ''}`}
-                onClick={() => { setActiveFilter(null); setSideFilter(null); }}
-                title={t('all')}
-              >
-                {t('all')}
-              </button>
-              {granadeTypes.map(g => (
+              <div className="filter-grenades-row">
                 <button
-                  key={g.type}
-                  className={`filter-btn ${activeFilter === g.type ? 'active' : ''}`}
-                  onClick={() => setActiveFilter(activeFilter === g.type ? null : g.type)}
-                  title={g.type}
+                  className={`filter-btn ${activeFilter === null && sideFilter === null ? 'active' : ''}`}
+                  onClick={() => { setActiveFilter(null); setSideFilter(null); }}
+                  title={t('all')}
                 >
-                  <img src={g.icon} alt={g.type} className="filter-icon" />
+                  {t('all')}
                 </button>
-              ))}
+                {granadeTypes.map(g => (
+                  <button
+                    key={g.type}
+                    className={`filter-btn ${activeFilter === g.type ? 'active' : ''}`}
+                    onClick={() => setActiveFilter(activeFilter === g.type ? null : g.type)}
+                    title={g.type}
+                  >
+                    <img src={g.icon} alt={g.type} className="filter-icon" />
+                  </button>
+                ))}
+              </div>
               <div className="filter-divider"></div>
-              <button
-                className={`filter-btn side-filter-btn ${sideFilter === 'ct' ? 'active' : ''}`}
-                onClick={() => setSideFilter(sideFilter === 'ct' ? null : 'ct')}
-                title="CT"
-              >
-                <img src="/icons/side-ct.png" alt="CT" className="filter-icon" />
-              </button>
-              <button
-                className={`filter-btn side-filter-btn ${sideFilter === 't' ? 'active' : ''}`}
-                onClick={() => setSideFilter(sideFilter === 't' ? null : 't')}
-                title="T"
-              >
-                <img src="/icons/side-t.png" alt="T" className="filter-icon" />
-              </button>
+              <div className="filter-sides-row">
+                <button
+                  className={`filter-btn side-filter-btn ${sideFilter === 'ct' ? 'active' : ''}`}
+                  onClick={() => setSideFilter(sideFilter === 'ct' ? null : 'ct')}
+                  title="CT"
+                >
+                  <img src="/icons/side-ct.png" alt="CT" className="filter-icon" />
+                </button>
+                <button
+                  className={`filter-btn side-filter-btn ${sideFilter === 't' ? 'active' : ''}`}
+                  onClick={() => setSideFilter(sideFilter === 't' ? null : 't')}
+                  title="T"
+                >
+                  <img src="/icons/side-t.png" alt="T" className="filter-icon" />
+                </button>
+              </div>
             </div>
             <div className="map-container" onClick={handleMapClick} ref={mapRef}>
               <img src={`/maps/${imageName}`} alt={selectedMap} className="map-image" />
