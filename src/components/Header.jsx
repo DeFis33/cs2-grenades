@@ -66,14 +66,15 @@ function Header({ isAdmin = false, guideOpen, setGuideOpen, onAdminLogin, onAdmi
             </div>
 
             {isAdmin && setGuideOpen && (
-              <div className={`guide-container ${guideOpen ? 'active' : ''}`}>
-                <button
-                  className="guide-icon-btn"
-                  onClick={() => setGuideOpen(!guideOpen)}
-                >
-                  <img src="/icons/guide.png" alt="Guide" className="guide-icon-img" />
+              <div
+                className="guide-container"
+                onMouseEnter={() => setGuideOpen(true)}
+                onMouseLeave={() => setGuideOpen(false)}
+              >
+                <button className="guide-icon-btn">
+                  <img src="/icons/help.png" alt="Guide" className="guide-icon-img" />
                 </button>
-                <div className="guide-dropdown" style={{ display: guideOpen ? 'block' : 'none' }}>
+                <div className="guide-dropdown">
                   <div className="guide-dropdown-inner">
                     <div className="guide-title">{t('guide')}</div>
                     <div className="guide-item guide-desktop">{t('guideClickMap')}</div>
@@ -94,7 +95,7 @@ function Header({ isAdmin = false, guideOpen, setGuideOpen, onAdminLogin, onAdmi
             )}
 
             <button
-              className={`edit-icon-btn ${isAdmin ? 'active' : ''}`}
+              className={`edit-icon-btn ${isAdmin && setGuideOpen ? 'active' : ''}`}
               onClick={handleEditorClick}
               title={isAdmin ? t('exitEditor') : t('editor')}
             >
