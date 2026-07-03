@@ -14,7 +14,7 @@ const mapsList = [
   { id: 'anubis', name: 'Anubis', image: null, available: false },
 ];
 
-function HomePage() {
+function HomePage({ isAdmin, onAdminLogin, onAdminLogout }) {
   const { lang, t } = useLanguage();
 
   useEffect(() => {
@@ -26,7 +26,11 @@ function HomePage() {
       <Helmet>
         <title>{t('homeTitle')}</title>
       </Helmet>
-      <Header />
+      <Header 
+        isAdmin={isAdmin}
+        onAdminLogin={onAdminLogin}
+        onAdminLogout={onAdminLogout}
+      />
 
       <div className="home-page">
         <div className="maps-grid">

@@ -22,7 +22,13 @@ function App() {
         <Router>
           <div className="app">
             <Routes>
-              <Route path="/" element={<HomePage />} />
+              <Route path="/" element={
+                <HomePage 
+                  isAdmin={isAdmin}
+                  onAdminLogin={handleAdminLogin}
+                  onAdminLogout={handleAdminLogout}
+                />
+              } />
               <Route path="/map/:mapId" element={
                 <MapPage 
                   isAdmin={isAdmin} 
