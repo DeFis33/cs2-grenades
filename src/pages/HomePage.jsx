@@ -28,6 +28,7 @@ function HomePage({ isAdmin, onAdminLogin, onAdminLogout }) {
       </Helmet>
       <Header 
         isAdmin={isAdmin}
+        setGuideOpen={() => {}}
         onAdminLogin={onAdminLogin}
         onAdminLogout={onAdminLogout}
       />
