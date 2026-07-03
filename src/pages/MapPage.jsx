@@ -7,7 +7,6 @@ import { useLanguage } from '../context/LanguageContext';
 const GIST_ID = '8f1c7f4ee430dd9bf0c317a782938d5b';
 const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN;
 const MARKERS_URL = `https://api.github.com/gists/${GIST_ID}`;
-const ADMIN_EMAIL = atob(import.meta.env.VITE_ADMIN_EMAIL || '');
 
 const granadeTypes = [
   { type: 'smoke', icon: '/icons/smoke.png' },
@@ -35,7 +34,7 @@ const maps = [
   { id: 'dust2', name: 'Dust 2' },
 ];
 
-function MapPage() {
+function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout }) {
   const { mapId } = useParams();
   const selectedMap = mapId;
   const [markers, setMarkers] = useState([]);
@@ -46,7 +45,6 @@ function MapPage() {
   const [drawingLine, setDrawingLine] = useState(null);
   const [hoveredMarker, setHoveredMarker] = useState(null);
   const [expandedGroup, setExpandedGroup] = useState(null);
-  const [guideOpen, setGuideOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState(null);
   const [activeFilter, setActiveFilter] = useState(null);
   const [imageZoom, setImageZoom] = useState(1);
@@ -55,8 +53,6 @@ function MapPage() {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const mapRef = useRef(null);
   const { lang, t } = useLanguage();
-
-  const isAdmin = true;
 
   const imageName = `${selectedMap}.png`;
 
@@ -113,10 +109,10 @@ function MapPage() {
   }, []);
 
   useEffect(() => {
-    const handleClick = () => setGuideOpen(false);
+    const handleClick = () => setGuideOpen && setGuideOpen(false);
     document.addEventListener('click', handleClick);
     return () => document.removeEventListener('click', handleClick);
-  }, []);
+  }, [setGuideOpen]);
 
   useEffect(() => {
     document.title = `${t('mapTitle')} - ${maps.find(m => m.id === selectedMap)?.name || ''}`;
@@ -241,8 +237,7 @@ function MapPage() {
     if (wasDragging) { setWasDragging(false); return; }
     if (isAdmin && e.ctrlKey) { setGranadeMenu({ x: marker.x, y: marker.y }); setSidePanel(null); setDrawingLine(null); return; }
     if (isAdmin && e.shiftKey) { setDrawingLine({ markerId: marker.id, fromX: marker.x, fromY: marker.y }); setSidePanel(null); setExpandedGroup(null); return; }
-    if (isAdmin) setSidePanel({ marker, mode: 'edit' });
-    else setSidePanel({ marker, mode: 'view' });
+    setSidePanel({ marker, mode: isAdmin ? 'edit' : 'view' });
   };
 
   const handleMarkerMouseDown = (e, marker) => {
@@ -514,6 +509,8 @@ function MapPage() {
         isAdmin={isAdmin}
         guideOpen={guideOpen}
         setGuideOpen={setGuideOpen}
+        onAdminLogin={onAdminLogin}
+        onAdminLogout={onAdminLogout}
       />
 
       <main className="main">
