@@ -53,13 +53,15 @@ function Header({ isAdmin = false, guideOpen, setGuideOpen, onAdminLogin, onAdmi
               {showMaps && (
                 <div className="dropdown">
                   <div className="dropdown-inner">
-                    <div className="dropdown-item"><Link to="/map/dust2">Dust 2</Link></div>
-                    <div className="dropdown-item"><Link to="/map/mirage">Mirage</Link></div>
-                    <div className="dropdown-item"><Link to="/map/inferno">Inferno</Link></div>
-                    <div className="dropdown-item"><Link to="/map/nuke">Nuke</Link></div>
-                    <div className="dropdown-item"><Link to="/map/overpass">Overpass</Link></div>
                     <div className="dropdown-item"><Link to="/map/ancient">Ancient</Link></div>
                     <div className="dropdown-item"><Link to="/map/anubis">Anubis</Link></div>
+                    <div className="dropdown-item"><Link to="/map/cache">Cache</Link></div>
+                    <div className="dropdown-item"><Link to="/map/dust2">Dust 2</Link></div>
+                    <div className="dropdown-item"><Link to="/map/inferno">Inferno</Link></div>
+                    <div className="dropdown-item"><Link to="/map/mirage">Mirage</Link></div>
+                    <div className="dropdown-item"><Link to="/map/nuke">Nuke</Link></div>
+                    <div className="dropdown-item"><Link to="/map/overpass">Overpass</Link></div>
+                    <div className="dropdown-item"><Link to="/map/train">Train</Link></div>
                   </div>
                 </div>
               )}

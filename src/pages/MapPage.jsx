@@ -31,7 +31,15 @@ const throwTypes = [
 ];
 
 const maps = [
-  { id: 'dust2', name: 'Dust 2' },
+  { id: 'ancient', name: 'Ancient', image: 'Ancient.png' },
+  { id: 'anubis', name: 'Anubis', image: 'Anubis.png' },
+  { id: 'cache', name: 'Cache', image: 'Cache.png' },
+  { id: 'dust2', name: 'Dust 2', image: 'Dust2.png' },
+  { id: 'inferno', name: 'Inferno', image: 'Inferno.png' },
+  { id: 'mirage', name: 'Mirage', image: 'Mirage.png' },
+  { id: 'nuke', name: 'Nuke', image: 'Nuke.png' },
+  { id: 'overpass', name: 'Overpass', image: 'Overpass.png' },
+  { id: 'train', name: 'Train', image: 'Train.png' },
 ];
 
 function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout }) {
@@ -55,7 +63,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
   const mapRef = useRef(null);
   const { lang, t } = useLanguage();
 
-  const imageName = `${selectedMap}.png`;
+  const imageName = maps.find(m => m.id === selectedMap)?.image || `${selectedMap}.png`;
 
   const getSpacing = () => window.innerWidth <= 768 ? 6 : 5;
 
