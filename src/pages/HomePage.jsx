@@ -8,7 +8,7 @@ const mapsList = [
   { id: 'ancient', name: 'Ancient', preview: 'Ancient.png' },
   { id: 'anubis', name: 'Anubis', preview: 'Anubis.png' },
   { id: 'cache', name: 'Cache', preview: 'Cache.png' },
-  { id: 'dust2', name: 'Dust 2', preview: 'Dust2.png' },
+  { id: 'dust2', name: 'Dust 2', preview: 'Dust.png' },
   { id: 'inferno', name: 'Inferno', preview: 'Inferno.png' },
   { id: 'mirage', name: 'Mirage', preview: 'Mirage.png' },
   { id: 'nuke', name: 'Nuke', preview: 'Nuke.png' },
