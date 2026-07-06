@@ -606,7 +606,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
               <img src={`/maps/${imageName}`} alt={selectedMap} className="map-image" />
 
               <svg className="lines-svg" viewBox="0 0 800 600" preserveAspectRatio="none">
-                {currentMarkers.map(marker => {
+                {filteredMarkers.map(marker => {
                   if (!marker.lineTo) return null;
                   if (drawingLine && marker.id !== drawingLine.markerId) return null;
                   const isHovered = hoveredMarker?.id === marker.id;
