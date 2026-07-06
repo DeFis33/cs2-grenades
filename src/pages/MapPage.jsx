@@ -841,7 +841,6 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                   </>
                 ) : (
                   <>
-                    <p className="throw-type-label">{t('videoLabel')}</p>
                     <div className="video-container">
                       {sidePanel.marker.videoUrl ? <video src={sidePanel.marker.videoUrl} controls className="side-video" /> : <p className="no-video">{t('noVideo')}</p>}
                     </div>
