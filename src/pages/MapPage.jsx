@@ -132,7 +132,6 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
     document.title = `${t('mapTitle')} - ${maps.find(m => m.id === selectedMap)?.name || ''}`;
   }, [selectedMap, lang, t]);
 
-  // ФИКС: Добавляем passive: false на контейнер карты
   useEffect(() => {
     const mapContainer = mapRef.current;
     if (!mapContainer) return;
@@ -278,7 +277,6 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
   const handleMarkerMouseDown = (e, marker) => {
     if (!isAdmin) return;
     e.stopPropagation();
-    // УБРАЛИ e.preventDefault()
 
     setWasDragging(false);
 
@@ -368,7 +366,6 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
 
     const isTouch = e.type === 'touchstart';
     e.stopPropagation();
-    // УБРАЛИ e.preventDefault()
 
     const clientX = isTouch ? e.touches[0].clientX : e.clientX;
     const clientY = isTouch ? e.touches[0].clientY : e.clientY;
@@ -442,7 +439,6 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
   const handleBendMouseDown = (e, marker) => {
     if (!isAdmin) return;
     e.stopPropagation();
-    // УБРАЛИ e.preventDefault()
 
     const svgElement = document.querySelector('.lines-svg');
     if (!svgElement) return;
