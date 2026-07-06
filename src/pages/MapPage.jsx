@@ -127,6 +127,21 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
     document.title = `${t('mapTitle')} - ${maps.find(m => m.id === selectedMap)?.name || ''}`;
   }, [selectedMap, lang, t]);
 
+  useEffect(() => {
+    const mapContainer = mapRef.current;
+    if (!mapContainer) return;
+
+    const handleTouchStart = (e) => {
+      e.preventDefault();
+    };
+
+    mapContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+    
+    return () => {
+      mapContainer.removeEventListener('touchstart', handleTouchStart);
+    };
+  }, []);
+
   const saveToFile = useCallback(async (data) => {
     try {
       await fetch(MARKERS_URL, {
@@ -342,7 +357,6 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
 
     const isTouch = e.type === 'touchstart';
     e.stopPropagation();
-    e.preventDefault();
 
     const clientX = isTouch ? e.touches[0].clientX : e.clientX;
     const clientY = isTouch ? e.touches[0].clientY : e.clientY;
