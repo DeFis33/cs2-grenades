@@ -5,7 +5,7 @@ import Header from '../components/Header';
 import { useLanguage } from '../context/LanguageContext';
 
 const GIST_ID = '8f1c7f4ee430dd9bf0c317a782938d5b';
-const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN || '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';
+const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN;
 const MARKERS_URL = `https://api.github.com/gists/${GIST_ID}`;
 
 const granadeTypes = [
