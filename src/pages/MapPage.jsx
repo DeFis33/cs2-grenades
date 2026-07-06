@@ -744,27 +744,29 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                 </div>
                 {sidePanel.mode === 'edit' ? (
                   <>
-                    <div className="throw-type-block">
-                      <p className="throw-type-label">{t('utilityType')}</p>
-                      <div className="side-buttons">
-                        {utilityTypes
-                          .filter(u => u.availableFor.includes(sidePanel.marker.type))
-                          .map(u => (
-                            <button
-                              key={u.value}
-                              className={`side-btn ${sidePanel.marker.utilityType === u.value ? 'active' : ''}`}
-                              onClick={() => {
-                                const newValue = sidePanel.marker.utilityType === u.value ? '' : u.value;
-                                updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, utilityType: newValue } : m));
-                                setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, utilityType: newValue } }));
-                              }}
-                              title={u.fullLabel}
-                            >
-                              {u.label}
-                            </button>
-                          ))}
+                    {utilityTypes.some(u => u.availableFor.includes(sidePanel.marker.type)) && (
+                      <div className="throw-type-block">
+                        <p className="throw-type-label">{t('utilityType')}</p>
+                        <div className="side-buttons">
+                          {utilityTypes
+                            .filter(u => u.availableFor.includes(sidePanel.marker.type))
+                            .map(u => (
+                              <button
+                                key={u.value}
+                                className={`side-btn ${sidePanel.marker.utilityType === u.value ? 'active' : ''}`}
+                                onClick={() => {
+                                  const newValue = sidePanel.marker.utilityType === u.value ? '' : u.value;
+                                  updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, utilityType: newValue } : m));
+                                  setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, utilityType: newValue } }));
+                                }}
+                                title={u.fullLabel}
+                              >
+                                {u.label}
+                              </button>
+                            ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     <p className="throw-type-label">{t('videoLabel')}</p>
                     <div className="edit-video-block">
