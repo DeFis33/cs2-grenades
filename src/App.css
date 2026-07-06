@@ -306,6 +306,9 @@ body {
   height: 30px;
   object-fit: contain;
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .granade-menu {
@@ -919,6 +922,7 @@ ul, li {
   display: block;
 }
 
+/* ФИЛЬТРЫ - ДЕСКТОП */
 .filter-panel {
   display: flex;
   flex-direction: column;
@@ -933,11 +937,21 @@ ul, li {
 }
 
 .filter-grenades-row {
-  display: contents;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .filter-sides-row {
-  display: contents;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-utility-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .filter-divider {
@@ -973,6 +987,11 @@ ul, li {
   border-color: #e94560;
   background-color: rgba(233, 69, 96, 0.25);
   box-shadow: 0 0 12px rgba(233, 69, 96, 0.3);
+}
+
+.utility-filter-btn {
+  font-weight: bold;
+  font-size: 14px;
 }
 
 .filter-icon {
@@ -1090,6 +1109,7 @@ ul, li {
   margin-top: 16px;
 }
 
+/* МОБИЛЬНАЯ ВЕРСИЯ */
 @media (max-width: 1024px) {
   .map-container { width: 100%; max-width: 100%; }
   .main { padding: 10px; align-items: flex-start; }
@@ -1105,9 +1125,7 @@ ul, li {
     padding: 20px 16px;
     order: 3;
   }
-  .filter-panel {
-    order: 2;
-  }
+  .filter-panel { order: 2; }
 }
 
 @media (max-width: 768px) {
@@ -1174,6 +1192,7 @@ ul, li {
   .images-gallery { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
   .gallery-image { height: 80px; }
 
+  /* ФИЛЬТРЫ - МОБИЛКА */
   .filter-panel {
     position: static;
     width: 100%;
@@ -1193,6 +1212,13 @@ ul, li {
   }
 
   .filter-sides-row {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .filter-utility-row {
     display: flex;
     flex-direction: row;
     gap: 8px;
@@ -1254,32 +1280,4 @@ ul, li {
   .granade-option:hover { transform: none; }
   .guide-container:hover .guide-dropdown { display: none; }
   .guide-container.active .guide-dropdown { display: block; }
-}
-
-@media (hover: none) and (pointer: coarse) {
-  .marker:hover { transform: translate(-50%, -50%) scale(1); }
-  .granade-option:hover { transform: none; }
-  .guide-container:hover .guide-dropdown { display: none; }
-  .guide-container.active .guide-dropdown { display: block; }
-}
-
-.marker-icon-img {
-  pointer-events: none;
-}
-
-.filter-utility-row {
-  display: flex;
-  gap: 4px;
-}
-
-.utility-filter-btn {
-  font-weight: bold;
-  font-size: 14px;
-  min-width: 32px;
-}
-
-.marker-icon-img {
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-drag: none;
 }
