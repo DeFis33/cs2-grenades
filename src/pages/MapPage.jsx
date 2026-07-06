@@ -864,7 +864,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                         <img src={sideTypes.find(s => s.value === sidePanel.marker.side)?.icon} alt="" className="side-display-icon" />
                       </div>
                     )}
-                    {sidePanel.marker.utilityType && (
+                    {sidePanel.marker.utilityType && utilityTypes.find(u => u.value === sidePanel.marker.utilityType)?.availableFor.includes(sidePanel.marker.type) && (
                       <div className="throw-type-display">
                         {t('utilityType')} {utilityTypes.find(u => u.value === sidePanel.marker.utilityType)?.fullLabel}
                       </div>
