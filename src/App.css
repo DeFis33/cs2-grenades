@@ -1266,3 +1266,20 @@ ul, li {
 .marker-icon-img {
   pointer-events: none;
 }
+
+.filter-utility-row {
+  display: flex;
+  gap: 4px;
+}
+
+.utility-filter-btn {
+  font-weight: bold;
+  font-size: 14px;
+  min-width: 32px;
+}
+
+.marker-icon-img {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}

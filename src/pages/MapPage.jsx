@@ -62,6 +62,11 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const mapRef = useRef(null);
   const { lang, t } = useLanguage();
+  const [revealFilter, setRevealFilter] = useState(null);
+  const utilityTypes = [
+    { value: 'reveal', label: 'R', fullLabel: 'Reveal' },
+    { value: 'instant', label: 'I', fullLabel: 'Instant' },
+  ];
 
   const imageName = maps.find(m => m.id === selectedMap)?.image || `${selectedMap}.png`;
 
@@ -137,7 +142,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
     };
 
     mapContainer.addEventListener('touchstart', preventDefaultTouch, { passive: false });
-    
+
     return () => {
       mapContainer.removeEventListener('touchstart', preventDefaultTouch);
     };
@@ -159,7 +164,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
           }
         })
       });
-      
+
       if (!response.ok) {
         console.error('Save failed:', response.status);
       }
@@ -242,6 +247,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
       side: '',
       images: [],
       name: '',
+      utilityType: ''
     };
     const updated = recalculateGroup([...markers, newMarker], granadeMenu.x, granadeMenu.y, selectedMap);
     updateMarkers(updated);
@@ -494,15 +500,16 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
 
   const currentMarkers = markers.filter(m => {
     if (m.mapId !== selectedMap) return false;
-    if (activeFilter === null && sideFilter === null) return true;
+    if (activeFilter === null && sideFilter === null && revealFilter === null) return true;
 
     const typeMatch = activeFilter === null || m.type === activeFilter;
     const sideMatch = sideFilter === null || m.side === sideFilter;
+    const utilityMatch = revealFilter === null || m.utilityType === revealFilter;
 
-    return typeMatch && sideMatch;
+    return typeMatch && sideMatch && utilityMatch;
   });
 
-  const filteredMarkers = activeFilter === null && sideFilter === null ? currentMarkers : (() => {
+  const filteredMarkers = activeFilter === null && sideFilter === null && revealFilter === null ? currentMarkers : (() => {
     const spacing = getSpacing();
     const grouped = {};
 
@@ -552,8 +559,8 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
             <div className="filter-panel">
               <div className="filter-grenades-row">
                 <button
-                  className={`filter-btn ${activeFilter === null && sideFilter === null ? 'active' : ''}`}
-                  onClick={() => { setActiveFilter(null); setSideFilter(null); }}
+                  className={`filter-btn ${activeFilter === null && sideFilter === null && revealFilter === null ? 'active' : ''}`}
+                  onClick={() => { setActiveFilter(null); setSideFilter(null); setRevealFilter(null); }}
                   title={t('all')}
                 >
                   {t('all')}
@@ -585,6 +592,18 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                 >
                   <img src="/icons/side-t.png" alt="T" className="filter-icon" />
                 </button>
+              </div>
+              <div className="filter-utility-row">
+                {utilityTypes.map(u => (
+                  <button
+                    key={u.value}
+                    className={`filter-btn utility-filter-btn ${revealFilter === u.value ? 'active' : ''}`}
+                    onClick={() => setRevealFilter(revealFilter === u.value ? null : u.value)}
+                    title={u.fullLabel}
+                  >
+                    {u.label}
+                  </button>
+                ))}
               </div>
             </div>
             <div className="map-container" onClick={handleMapClick} ref={mapRef}>
@@ -726,29 +745,23 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                 {sidePanel.mode === 'edit' ? (
                   <>
                     <div className="throw-type-block">
-                      <p className="throw-type-label">{t('grenadeName')}</p>
-                      <input
-                        key={sidePanel.marker.id}
-                        type="text"
-                        className="video-url-input"
-                        placeholder={t('grenadeNamePlaceholder')}
-                        defaultValue={sidePanel.marker.name || ''}
-                        onBlur={(e) => {
-                          const newName = e.target.value;
-                          updateMarkers(markers.map(m =>
-                            m.id === sidePanel.marker.id ? { ...m, name: newName } : m
-                          ));
-                          setSidePanel(prev => ({
-                            ...prev,
-                            marker: { ...prev.marker, name: newName }
-                          }));
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.target.blur();
-                          }
-                        }}
-                      />
+                      <p className="throw-type-label">Utility Type</p>
+                      <div className="side-buttons">
+                        {utilityTypes.map(u => (
+                          <button
+                            key={u.value}
+                            className={`side-btn ${sidePanel.marker.utilityType === u.value ? 'active' : ''}`}
+                            onClick={() => {
+                              const newValue = sidePanel.marker.utilityType === u.value ? '' : u.value;
+                              updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, utilityType: newValue } : m));
+                              setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, utilityType: newValue } }));
+                            }}
+                            title={u.fullLabel}
+                          >
+                            {u.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     <div className="edit-video-block">
@@ -840,7 +853,18 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                     )}
 
                     {sidePanel.marker.throwType && <div className="throw-type-display">{t('throwType')} {throwTypes.find(t => t.value === sidePanel.marker.throwType)?.label}</div>}
-                    {sidePanel.marker.side && <div className="side-display"><span className="side-display-label">{t('side')}</span><img src={sideTypes.find(s => s.value === sidePanel.marker.side)?.icon} alt="" className="side-display-icon" /></div>}
+                    {sidePanel.marker.side && (
+                      <div className="side-display">
+                        <span className="side-display-label">{t('side')}</span>
+                        <img src={sideTypes.find(s => s.value === sidePanel.marker.side)?.icon} alt="" className="side-display-icon" />
+                      </div>
+                    )}
+                    {sidePanel.marker.utilityType && (
+                      <div className="side-display">
+                        <span className="side-display-label">Type:</span>
+                        <span>{utilityTypes.find(u => u.value === sidePanel.marker.utilityType)?.fullLabel}</span>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
