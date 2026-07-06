@@ -671,7 +671,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                       onMouseEnter={() => handleMarkerHover(marker)}
                       onMouseLeave={handleMarkerLeave}
                       title={marker.name || type?.type}>
-                      <img src={type?.icon} alt={type?.type} className="marker-icon-img" />
+                      <img src={type?.icon} alt={type?.type} className="marker-icon-img" draggable="false" />
                     </div>
                   );
                 }
@@ -692,7 +692,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                               onMouseEnter={() => handleMarkerHover(marker)}
                               onMouseLeave={handleMarkerLeave}
                               title={marker.name || type?.type}>
-                              <img src={type?.icon} alt={type?.type} className="marker-icon-img" />
+                              <img src={type?.icon} alt={type?.type} className="marker-icon-img" draggable="false" />
                             </div>
                           );
                         })}

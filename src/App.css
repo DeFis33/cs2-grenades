@@ -1262,3 +1262,7 @@ ul, li {
   .guide-container:hover .guide-dropdown { display: none; }
   .guide-container.active .guide-dropdown { display: block; }
 }
+
+.marker-icon-img {
+  pointer-events: none;
+}
