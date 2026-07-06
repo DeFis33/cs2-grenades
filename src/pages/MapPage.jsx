@@ -744,7 +744,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                 </div>
                 {sidePanel.mode === 'edit' ? (
                   <>
-                    {utilityTypes.some(u => u.availableFor.includes(sidePanel.marker.type)) && (
+                    {(sidePanel.marker.type === 'he' || sidePanel.marker.type === 'smoke') && (
                       <div className="throw-type-block">
                         <p className="throw-type-label">{t('utilityType')}</p>
                         <div className="side-buttons">
