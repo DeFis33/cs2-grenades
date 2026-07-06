@@ -688,6 +688,7 @@ kbd {
   transition: all 0.2s;
   padding: 0;
   overflow: hidden;
+  color: white;
 }
 
 .side-btn-icon {

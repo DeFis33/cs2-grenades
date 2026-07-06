@@ -745,7 +745,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                 {sidePanel.mode === 'edit' ? (
                   <>
                     <div className="throw-type-block">
-                      <p className="throw-type-label">Utility Type</p>
+                      <p className="throw-type-label">{t('utilityType')}</p>
                       <div className="side-buttons">
                         {utilityTypes
                           .filter(u => u.availableFor.includes(sidePanel.marker.type))
@@ -766,6 +766,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                       </div>
                     </div>
 
+                    <p className="throw-type-label">{t('videoLabel')}</p>
                     <div className="edit-video-block">
                       {sidePanel.marker.lineTo && <button className="delete-line-btn" onClick={handleDeleteLine}>{t('deleteTrajectory')}</button>}
                       {sidePanel.marker.videoUrl && <button className="delete-line-btn" onClick={handleDeleteVideo}>{t('deleteVideo')}</button>}
@@ -842,8 +843,10 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                   </>
                 ) : (
                   <>
-                    <div className="video-container">{sidePanel.marker.videoUrl ? <video src={sidePanel.marker.videoUrl} controls className="side-video" /> : <p className="no-video">{t('noVideo')}</p>}</div>
-
+                    <p className="throw-type-label">{t('videoLabel')}</p>
+                    <div className="video-container">
+                      {sidePanel.marker.videoUrl ? <video src={sidePanel.marker.videoUrl} controls className="side-video" /> : <p className="no-video">{t('noVideo')}</p>}
+                    </div>
                     {sidePanel.marker.images && sidePanel.marker.images.length > 0 && (
                       <div className="images-gallery">
                         {sidePanel.marker.images.map((img, index) => (
@@ -862,9 +865,8 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                       </div>
                     )}
                     {sidePanel.marker.utilityType && (
-                      <div className="side-display">
-                        <span className="side-display-label">Type:</span>
-                        <span>{utilityTypes.find(u => u.value === sidePanel.marker.utilityType)?.fullLabel}</span>
+                      <div className="throw-type-display">
+                        {t('utilityType')} {utilityTypes.find(u => u.value === sidePanel.marker.utilityType)?.fullLabel}
                       </div>
                     )}
                   </>

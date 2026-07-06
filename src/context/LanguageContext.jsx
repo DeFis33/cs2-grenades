@@ -42,6 +42,10 @@ const translations = {
     sideAny: 'Любая',
     grenadeName: 'Название гранаты:',
     grenadeNamePlaceholder: 'Введите название',
+    utilityType: 'Тип гранаты:',
+    reveal: 'Reveal',
+    instant: 'Instant',
+    videoLabel: 'Видео:'
   },
   en: {
     maps: 'Maps',
@@ -84,6 +88,10 @@ const translations = {
     sideAny: 'Any',
     grenadeName: 'Grenade name:',
     grenadeNamePlaceholder: 'Enter name',
+    utilityType: 'Utility type:',
+    reveal: 'Reveal',
+    instant: 'Instant',
+    videoLabel: 'Video:'
   },
 };
 
