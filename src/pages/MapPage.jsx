@@ -64,8 +64,8 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
   const { lang, t } = useLanguage();
   const [revealFilter, setRevealFilter] = useState(null);
   const utilityTypes = [
-    { value: 'reveal', label: 'R', fullLabel: 'Reveal' },
-    { value: 'instant', label: 'I', fullLabel: 'Instant' },
+    { value: 'reveal', label: 'R', fullLabel: 'Reveal', availableFor: ['he'] },
+    { value: 'instant', label: 'I', fullLabel: 'Instant', availableFor: ['smoke'] },
   ];
 
   const imageName = maps.find(m => m.id === selectedMap)?.image || `${selectedMap}.png`;
@@ -747,20 +747,22 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                     <div className="throw-type-block">
                       <p className="throw-type-label">Utility Type</p>
                       <div className="side-buttons">
-                        {utilityTypes.map(u => (
-                          <button
-                            key={u.value}
-                            className={`side-btn ${sidePanel.marker.utilityType === u.value ? 'active' : ''}`}
-                            onClick={() => {
-                              const newValue = sidePanel.marker.utilityType === u.value ? '' : u.value;
-                              updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, utilityType: newValue } : m));
-                              setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, utilityType: newValue } }));
-                            }}
-                            title={u.fullLabel}
-                          >
-                            {u.label}
-                          </button>
-                        ))}
+                        {utilityTypes
+                          .filter(u => u.availableFor.includes(sidePanel.marker.type))
+                          .map(u => (
+                            <button
+                              key={u.value}
+                              className={`side-btn ${sidePanel.marker.utilityType === u.value ? 'active' : ''}`}
+                              onClick={() => {
+                                const newValue = sidePanel.marker.utilityType === u.value ? '' : u.value;
+                                updateMarkers(markers.map(m => m.id === sidePanel.marker.id ? { ...m, utilityType: newValue } : m));
+                                setSidePanel(prev => ({ ...prev, marker: { ...prev.marker, utilityType: newValue } }));
+                              }}
+                              title={u.fullLabel}
+                            >
+                              {u.label}
+                            </button>
+                          ))}
                       </div>
                     </div>
 
