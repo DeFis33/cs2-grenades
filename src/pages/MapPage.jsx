@@ -860,6 +860,11 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                     )}
 
                     {sidePanel.marker.throwType && <div className="throw-type-display">{t('throwType')} {throwTypes.find(t => t.value === sidePanel.marker.throwType)?.label}</div>}
+                    {sidePanel.marker.utilityType && utilityTypes.find(u => u.value === sidePanel.marker.utilityType)?.availableFor.includes(sidePanel.marker.type) && (
+                      <div className="throw-type-display">
+                        {t('utilityType')} {utilityTypes.find(u => u.value === sidePanel.marker.utilityType)?.fullLabel}
+                      </div>
+                    )}
                     {sidePanel.marker.side && (
                       <div className="side-display">
                         <span className="side-display-label">{t('side')}</span>
