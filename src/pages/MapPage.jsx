@@ -147,6 +147,10 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
     };
   }, []);
 
+  useEffect(() => {
+    setExpandedGroup(null);
+  }, [activeFilter, sideFilter, revealFilter]);
+
   const saveToFile = useCallback(async (data) => {
     try {
       const response = await fetch(MARKERS_URL, {
