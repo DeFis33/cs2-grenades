@@ -673,7 +673,7 @@ kbd {
   line-height: 1;
 }
 
-.side-buttons { display: flex; gap: 10px; }
+.side-buttons { display: flex; gap: 10px; margin-bottom: 16px; }
 
 .side-btn {
   width: 44px;
