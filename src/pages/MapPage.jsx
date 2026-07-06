@@ -34,7 +34,7 @@ const maps = [
   { id: 'ancient', name: 'Ancient', image: 'Ancient.png' },
   { id: 'anubis', name: 'Anubis', image: 'Anubis.png' },
   { id: 'cache', name: 'Cache', image: 'Cache.png' },
-  { id: 'dust2', name: 'Dust 2', image: 'Dust.png' },
+  { id: 'dust2', name: 'Dust 2', image: 'dust2.png' },
   { id: 'inferno', name: 'Inferno', image: 'Inferno.png' },
   { id: 'mirage', name: 'Mirage', image: 'Mirage.png' },
   { id: 'nuke', name: 'Nuke', image: 'Nuke.png' },
@@ -127,24 +127,25 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
     document.title = `${t('mapTitle')} - ${maps.find(m => m.id === selectedMap)?.name || ''}`;
   }, [selectedMap, lang, t]);
 
+  // ФИКС: Добавляем passive: false на контейнер карты
   useEffect(() => {
     const mapContainer = mapRef.current;
     if (!mapContainer) return;
 
-    const handleTouchStart = (e) => {
+    const preventDefaultTouch = (e) => {
       e.preventDefault();
     };
 
-    mapContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+    mapContainer.addEventListener('touchstart', preventDefaultTouch, { passive: false });
     
     return () => {
-      mapContainer.removeEventListener('touchstart', handleTouchStart);
+      mapContainer.removeEventListener('touchstart', preventDefaultTouch);
     };
   }, []);
 
   const saveToFile = useCallback(async (data) => {
     try {
-      await fetch(MARKERS_URL, {
+      const response = await fetch(MARKERS_URL, {
         method: 'PATCH',
         headers: {
           'Authorization': `token ${GITHUB_TOKEN}`,
@@ -158,6 +159,10 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
           }
         })
       });
+      
+      if (!response.ok) {
+        console.error('Save failed:', response.status);
+      }
     } catch (err) {
       console.error('Ошибка сохранения:', err);
     }
@@ -266,8 +271,8 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
 
   const handleMarkerMouseDown = (e, marker) => {
     if (!isAdmin) return;
-    e.preventDefault();
     e.stopPropagation();
+    // УБРАЛИ e.preventDefault()
 
     setWasDragging(false);
 
@@ -357,6 +362,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
 
     const isTouch = e.type === 'touchstart';
     e.stopPropagation();
+    // УБРАЛИ e.preventDefault()
 
     const clientX = isTouch ? e.touches[0].clientX : e.clientX;
     const clientY = isTouch ? e.touches[0].clientY : e.clientY;
@@ -430,7 +436,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
   const handleBendMouseDown = (e, marker) => {
     if (!isAdmin) return;
     e.stopPropagation();
-    e.preventDefault();
+    // УБРАЛИ e.preventDefault()
 
     const svgElement = document.querySelector('.lines-svg');
     if (!svgElement) return;
