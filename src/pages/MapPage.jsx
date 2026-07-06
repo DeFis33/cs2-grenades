@@ -740,6 +740,32 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                 </div>
                 {sidePanel.mode === 'edit' ? (
                   <>
+                    <div className="throw-type-block">
+                      <p className="throw-type-label">{t('grenadeName')}</p>
+                      <input
+                        key={sidePanel.marker.id}
+                        type="text"
+                        className="video-url-input"
+                        placeholder={t('grenadeNamePlaceholder')}
+                        defaultValue={sidePanel.marker.name || ''}
+                        onBlur={(e) => {
+                          const newName = e.target.value;
+                          updateMarkers(markers.map(m =>
+                            m.id === sidePanel.marker.id ? { ...m, name: newName } : m
+                          ));
+                          setSidePanel(prev => ({
+                            ...prev,
+                            marker: { ...prev.marker, name: newName }
+                          }));
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.target.blur();
+                          }
+                        }}
+                      />
+                    </div>
+
                     {(sidePanel.marker.type === 'he' || sidePanel.marker.type === 'smoke') && (
                       <div className="throw-type-block">
                         <p className="throw-type-label">{t('utilityType')}</p>
