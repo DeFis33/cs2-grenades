@@ -34,7 +34,7 @@ const maps = [
   { id: 'ancient', name: 'Ancient', image: 'Ancient.png' },
   { id: 'anubis', name: 'Anubis', image: 'Anubis.png' },
   { id: 'cache', name: 'Cache', image: 'Cache.png' },
-  { id: 'dust2', name: 'Dust 2', image: 'dust2.png' },
+  { id: 'dust2', name: 'Dust 2', image: 'Dust.png' },
   { id: 'inferno', name: 'Inferno', image: 'Inferno.png' },
   { id: 'mirage', name: 'Mirage', image: 'Mirage.png' },
   { id: 'nuke', name: 'Nuke', image: 'Nuke.png' },
