@@ -198,7 +198,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
     const [gx, gy] = groupKey.split(',').map(Number);
     const collapsed = markers.map(m => {
       if (Math.abs(m.x - gx) < 1.5 && Math.abs(m.y - gy) < 1.5) {
-        return { ...m, displayX: gx, displayY: gy, bendAbsoluteX: 0, bendAbsoluteY: 0 };
+        return { ...m, displayX: gx, displayY: gy };
       }
       return m;
     });
