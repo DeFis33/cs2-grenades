@@ -62,6 +62,7 @@ function Header({ isAdmin = false, guideOpen, setGuideOpen, onAdminLogin, onAdmi
                     <div className="dropdown-item"><Link to="/map/nuke">Nuke</Link></div>
                     <div className="dropdown-item"><Link to="/map/overpass">Overpass</Link></div>
                     <div className="dropdown-item"><Link to="/map/train">Train</Link></div>
+                    <div className="dropdown-item"><Link to="/map/vertigo">Vertigo</Link></div>
                   </div>
                 </div>
               )}

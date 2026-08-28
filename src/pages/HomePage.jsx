@@ -14,6 +14,7 @@ const mapsList = [
   { id: 'nuke', name: 'Nuke', preview: 'Nuke.png' },
   { id: 'overpass', name: 'Overpass', preview: 'Overpass.png' },
   { id: 'train', name: 'Train', preview: 'Train.png' },
+  { id: 'vertigo', name: 'Vertigo', preview: 'Vertigo.png' },
 ];
 
 function HomePage({ isAdmin, onAdminLogin, onAdminLogout }) {

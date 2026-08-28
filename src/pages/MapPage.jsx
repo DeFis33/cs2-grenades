@@ -40,6 +40,7 @@ const maps = [
   { id: 'nuke', name: 'Nuke', image: 'Nuke.png' },
   { id: 'overpass', name: 'Overpass', image: 'Overpass.png' },
   { id: 'train', name: 'Train', image: 'Train.png' },
+  { id: 'vertigo', name: 'Vertigo', image: 'Vertigo.png' },
 ];
 
 function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout }) {
