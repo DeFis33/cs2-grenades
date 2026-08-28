@@ -656,34 +656,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                 ))}
               </div>
             </div>
-            {selectedMap === 'vertigo' && (
-              <div className="vertigo-level-switcher">
-                <button
-                  className={`level-btn ${vertigoLevel === 1 ? 'active' : ''}`}
-                  onClick={() => {
-                    setVertigoLevel(1);
-                    setExpandedGroup(null);
-                    setSidePanel(null);
-                    setGranadeMenu(null);
-                    setDrawingLine(null);
-                  }}
-                >
-                  1
-                </button>
-                <button
-                  className={`level-btn ${vertigoLevel === 2 ? 'active' : ''}`}
-                  onClick={() => {
-                    setVertigoLevel(2);
-                    setExpandedGroup(null);
-                    setSidePanel(null);
-                    setGranadeMenu(null);
-                    setDrawingLine(null);
-                  }}
-                >
-                  2
-                </button>
-              </div>
-            )}
+
             <div className="map-container" onClick={handleMapClick} ref={mapRef}>
               <img src={`/maps/${imageName}`} alt={selectedMap} className="map-image" />
 
