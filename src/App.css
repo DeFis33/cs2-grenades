@@ -1282,3 +1282,57 @@ ul, li {
   .guide-container:hover .guide-dropdown { display: none; }
   .guide-container.active .guide-dropdown { display: block; }
 }
+
+/* Переключатель уровней Vertigo */
+.vertigo-level-switcher {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: absolute;
+  left: -70px;
+  top: 160px; /* Под фильтрами */
+  z-index: 100;
+}
+
+.level-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  border: 2px solid #4a5568;
+  background-color: #1a1a2e;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.level-btn:hover {
+  border-color: #e94560;
+  background-color: rgba(233, 69, 96, 0.15);
+}
+
+.level-btn.active {
+  border-color: #e94560;
+  background-color: rgba(233, 69, 96, 0.25);
+  box-shadow: 0 0 12px rgba(233, 69, 96, 0.3);
+}
+
+/* Мобильная версия */
+@media (max-width: 768px) {
+  .vertigo-level-switcher {
+    position: static;
+    flex-direction: row;
+    justify-content: center;
+    margin-top: 8px;
+    order: 2;
+  }
+  
+  .level-btn {
+    width: 44px;
+    height: 44px;
+  }
+}

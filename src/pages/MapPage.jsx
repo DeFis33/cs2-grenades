@@ -40,7 +40,7 @@ const maps = [
   { id: 'nuke', name: 'Nuke', image: 'Nuke.png' },
   { id: 'overpass', name: 'Overpass', image: 'Overpass.png' },
   { id: 'train', name: 'Train', image: 'Train.png' },
-  { id: 'vertigo', name: 'Vertigo', image: 'Vertigo.png' },
+  { id: 'vertigo', name: 'Vertigo', image: 'Vertigo-up.png', levels: true },
 ];
 
 function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout }) {
@@ -69,7 +69,10 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
     { value: 'instant', label: 'I', fullLabel: 'Instant', availableFor: ['smoke'] },
   ];
 
-  const imageName = maps.find(m => m.id === selectedMap)?.image || `${selectedMap}.png`;
+  const [vertigoLevel, setVertigoLevel] = useState(1);
+  const imageName = selectedMap === 'vertigo'
+    ? `Vertigo-${vertigoLevel === 1 ? 'up' : 'down'}.png`
+    : maps.find(m => m.id === selectedMap)?.image || `${selectedMap}.png`;
 
   const getSpacing = () => window.innerWidth <= 768 ? 6 : 5;
 
@@ -106,6 +109,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
               ...m,
               displayX: m.displayX ?? m.x,
               displayY: m.displayY ?? m.y,
+              level: m.level || 1,
               lineTo: hasLineTo ? m.lineTo : null,
               bendAbsoluteX: bendAbsoluteX || 0,
               bendAbsoluteY: bendAbsoluteY || 0,
@@ -150,7 +154,10 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
 
   useEffect(() => {
     setExpandedGroup(null);
-  }, [activeFilter, sideFilter, revealFilter]);
+    if (selectedMap !== 'vertigo') {
+      setVertigoLevel(1);
+    }
+  }, [activeFilter, sideFilter, revealFilter, selectedMap]);
 
   const saveToFile = useCallback(async (data) => {
     try {
@@ -236,6 +243,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
     const newMarker = {
       id: Date.now(),
       mapId: selectedMap,
+      level: selectedMap === 'vertigo' ? vertigoLevel : 1,
       x: granadeMenu.x,
       y: granadeMenu.y,
       displayX: granadeMenu.x,
@@ -501,12 +509,16 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
 
   const currentMarkers = markers.filter(m => {
     if (m.mapId !== selectedMap) return false;
-    if (activeFilter === null && sideFilter === null && revealFilter === null) return true;
 
+    if (selectedMap === 'vertigo') {
+      const markerLevel = m.level || 1;
+      if (markerLevel !== vertigoLevel) return false;
+    }
+
+    if (activeFilter === null && sideFilter === null && revealFilter === null) return true;
     const typeMatch = activeFilter === null || m.type === activeFilter;
     const sideMatch = sideFilter === null || m.side === sideFilter;
     const utilityMatch = revealFilter === null || m.utilityType === revealFilter;
-
     return typeMatch && sideMatch && utilityMatch;
   });
 
@@ -607,6 +619,34 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                 ))}
               </div>
             </div>
+            {selectedMap === 'vertigo' && (
+              <div className="vertigo-level-switcher">
+                <button
+                  className={`level-btn ${vertigoLevel === 1 ? 'active' : ''}`}
+                  onClick={() => {
+                    setVertigoLevel(1);
+                    setExpandedGroup(null);
+                    setSidePanel(null);
+                    setGranadeMenu(null);
+                    setDrawingLine(null);
+                  }}
+                >
+                  1
+                </button>
+                <button
+                  className={`level-btn ${vertigoLevel === 2 ? 'active' : ''}`}
+                  onClick={() => {
+                    setVertigoLevel(2);
+                    setExpandedGroup(null);
+                    setSidePanel(null);
+                    setGranadeMenu(null);
+                    setDrawingLine(null);
+                  }}
+                >
+                  2
+                </button>
+              </div>
+            )}
             <div className="map-container" onClick={handleMapClick} ref={mapRef}>
               <img src={`/maps/${imageName}`} alt={selectedMap} className="map-image" />
 
