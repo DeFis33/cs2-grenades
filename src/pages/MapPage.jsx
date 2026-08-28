@@ -71,7 +71,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
 
   const [vertigoLevel, setVertigoLevel] = useState(1);
   const imageName = selectedMap === 'vertigo'
-    ? `Vertigo-${vertigoLevel === 1 ? 'up' : 'down'}.png`
+    ? `Vertigo-${vertigoLevel === 1 ? 'down' : 'up'}.png`
     : maps.find(m => m.id === selectedMap)?.image || `${selectedMap}.png`;
 
   const getSpacing = () => window.innerWidth <= 768 ? 6 : 5;
@@ -589,7 +589,43 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                   </button>
                 ))}
               </div>
+
               <div className="filter-divider"></div>
+
+              {selectedMap === 'vertigo' && (
+                <>
+                  <div className="filter-vertigo-levels">
+                    <button
+                      className={`filter-btn level-btn ${vertigoLevel === 1 ? 'active' : ''}`}
+                      onClick={() => {
+                        setVertigoLevel(1);
+                        setExpandedGroup(null);
+                        setSidePanel(null);
+                        setGranadeMenu(null);
+                        setDrawingLine(null);
+                      }}
+                      title="Level 1"
+                    >
+                      1
+                    </button>
+                    <button
+                      className={`filter-btn level-btn ${vertigoLevel === 2 ? 'active' : ''}`}
+                      onClick={() => {
+                        setVertigoLevel(2);
+                        setExpandedGroup(null);
+                        setSidePanel(null);
+                        setGranadeMenu(null);
+                        setDrawingLine(null);
+                      }}
+                      title="Level 2"
+                    >
+                      2
+                    </button>
+                  </div>
+                  <div className="filter-divider"></div>
+                </>
+              )}
+
               <div className="filter-sides-row">
                 <button
                   className={`filter-btn side-filter-btn ${sideFilter === 'ct' ? 'active' : ''}`}
@@ -606,6 +642,7 @@ function MapPage({ isAdmin, guideOpen, setGuideOpen, onAdminLogin, onAdminLogout
                   <img src="/icons/side-t.png" alt="T" className="filter-icon" />
                 </button>
               </div>
+
               <div className="filter-utility-row">
                 {utilityTypes.map(u => (
                   <button

@@ -1284,16 +1284,6 @@ ul, li {
 }
 
 /* Переключатель уровней Vertigo */
-.vertigo-level-switcher {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  position: absolute;
-  left: -70px;
-  top: 160px; /* Под фильтрами */
-  z-index: 100;
-}
-
 .level-btn {
   width: 48px;
   height: 48px;
@@ -1334,5 +1324,24 @@ ul, li {
   .level-btn {
     width: 44px;
     height: 44px;
+  }
+}
+
+.filter-vertigo-levels {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.level-btn {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* В мобильной версии */
+@media (max-width: 768px) {
+  .filter-vertigo-levels {
+    flex-direction: row;
+    justify-content: center;
   }
 }
