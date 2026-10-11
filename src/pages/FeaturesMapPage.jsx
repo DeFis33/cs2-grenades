@@ -20,15 +20,17 @@ function FeaturesMapPage({ isAdmin, onAdminLogin, onAdminLogout }) {
   const [features, setFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+
   const [videoUrl, setVideoUrl] = useState('');
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [nameRu, setNameRu] = useState('');
+  const [nameEn, setNameEn] = useState('');
+  const [descRu, setDescRu] = useState('');
+  const [descEn, setDescEn] = useState('');
 
   useEffect(() => {
     document.title = `${t('featuresPageTitle')} - ${feature?.name || ''}`;
   }, [lang, t, feature]);
 
-  // Загрузка из Gist
   useEffect(() => {
     fetch(FEATURES_URL)
       .then(res => res.json())
@@ -45,7 +47,6 @@ function FeaturesMapPage({ isAdmin, onAdminLogin, onAdminLogout }) {
       .finally(() => setLoading(false));
   }, [featureId]);
 
-  // Сохранение в Gist
   const saveToFile = useCallback(async (data) => {
     try {
       const res = await fetch(FEATURES_URL);
@@ -81,26 +82,35 @@ function FeaturesMapPage({ isAdmin, onAdminLogin, onAdminLogout }) {
 
   const handleAdd = (e) => {
     e.preventDefault();
-    if (!videoUrl && !name) return;
+    if (!nameRu && !nameEn) return;
     const newFeatures = [
       ...features,
       {
         id: Date.now(),
         videoUrl,
-        name,
-        description,
+        name: { ru: nameRu, en: nameEn },
+        description: { ru: descRu, en: descEn },
       },
     ];
     updateFeatures(newFeatures);
     setVideoUrl('');
-    setName('');
-    setDescription('');
+    setNameRu('');
+    setNameEn('');
+    setDescRu('');
+    setDescEn('');
     setShowForm(false);
   };
 
   const handleDelete = (id) => {
     const newFeatures = features.filter(f => f.id !== id);
     updateFeatures(newFeatures);
+  };
+
+  // Получить текст на нужном языке (с fallback)
+  const getText = (obj) => {
+    if (!obj) return '';
+    if (typeof obj === 'string') return obj; // старый формат
+    return obj[lang] || obj.ru || obj.en || '';
   };
 
   if (!feature) {
@@ -155,20 +165,34 @@ function FeaturesMapPage({ isAdmin, onAdminLogin, onAdminLogout }) {
                   placeholder={t('featurePlaceholderVideo')}
                   value={videoUrl}
                   onChange={e => setVideoUrl(e.target.value)}
+                />
+                <input
+                  type="text"
+                  className="video-url-input"
+                  placeholder={t('featurePlaceholderNameRu')}
+                  value={nameRu}
+                  onChange={e => setNameRu(e.target.value)}
                   autoFocus
                 />
                 <input
                   type="text"
                   className="video-url-input"
-                  placeholder={t('featurePlaceholderName')}
-                  value={name}
-                  onChange={e => setName(e.target.value)}
+                  placeholder={t('featurePlaceholderNameEn')}
+                  value={nameEn}
+                  onChange={e => setNameEn(e.target.value)}
                 />
                 <textarea
                   className="video-url-input feature-textarea"
-                  placeholder={t('featurePlaceholderDesc')}
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
+                  placeholder={t('featurePlaceholderDescRu')}
+                  value={descRu}
+                  onChange={e => setDescRu(e.target.value)}
+                  rows={4}
+                />
+                <textarea
+                  className="video-url-input feature-textarea"
+                  placeholder={t('featurePlaceholderDescEn')}
+                  value={descEn}
+                  onChange={e => setDescEn(e.target.value)}
                   rows={4}
                 />
                 <div className="feature-form-actions">
@@ -205,8 +229,8 @@ function FeaturesMapPage({ isAdmin, onAdminLogin, onAdminLogout }) {
                 {f.videoUrl && (
                   <video src={f.videoUrl} controls className="feature-card-video" />
                 )}
-                {f.name && <div className="feature-card-name">{f.name}</div>}
-                {f.description && <p className="feature-card-desc">{f.description}</p>}
+                {f.name && <div className="feature-card-name">{getText(f.name)}</div>}
+                {f.description && <p className="feature-card-desc">{getText(f.description)}</p>}
               </div>
             ))}
           </div>
