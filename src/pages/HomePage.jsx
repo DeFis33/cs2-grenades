@@ -31,7 +31,7 @@ function HomePage({ isAdmin, onAdminLogin, onAdminLogout }) {
       </Helmet>
       <Header
         isAdmin={isAdmin}
-        setGuideOpen={() => {}}
+        setGuideOpen={() => { }}
         onAdminLogin={onAdminLogin}
         onAdminLogout={onAdminLogout}
       />
@@ -63,13 +63,32 @@ function HomePage({ isAdmin, onAdminLogin, onAdminLogout }) {
           ))}
         </div>
 
-        {/* Большой блок "Фишки" на всю ширину */}
         <Link to="/features" className="features-block">
           <div className="features-block-content">
             <h2 className="features-block-title">{t('featuresBlockTitle')}</h2>
             <p className="features-block-desc">{t('featuresBlockDesc')}</p>
           </div>
-          <span className="features-block-arrow">→</span>
+
+          <div className="features-block-images">
+            <img
+              src="/icons/features1.png"
+              alt=""
+              className="features-block-image"
+              draggable="false"
+            />
+            <img
+              src="/icons/features2.png"
+              alt=""
+              className="features-block-image"
+              draggable="false"
+            />
+            <img
+              src="/icons/features3.png"
+              alt=""
+              className="features-block-image"
+              draggable="false"
+            />
+          </div>
         </Link>
       </div>
     </>

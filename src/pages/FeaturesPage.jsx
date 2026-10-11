@@ -1,7 +1,12 @@
 import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Header from '../components/Header';
 import { useLanguage } from '../context/LanguageContext';
+
+const featuresList = [
+  { id: 'mirage', name: 'Mirage', logo: '/icons/mirage-logo.png' },
+];
 
 function FeaturesPage({ isAdmin, onAdminLogin, onAdminLogout }) {
   const { lang, t } = useLanguage();
@@ -23,9 +28,24 @@ function FeaturesPage({ isAdmin, onAdminLogin, onAdminLogout }) {
       />
 
       <div className="home-page">
-        <div className="features-page-inner">
-          <h1 className="page-section-title">{t('featuresTitle')}</h1>
-          {/* здесь будет контент страницы фишек */}
+        <h1 className="page-section-title">{t('featuresTitle')}</h1>
+
+        <div className="features-list">
+          {featuresList.map(f => (
+            <Link
+              key={f.id}
+              to={`/features/${f.id}`}
+              className="feature-btn"
+            >
+              <img
+                src={f.logo}
+                alt={f.name}
+                className="feature-btn-logo"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+              <span className="feature-btn-name">{f.name}</span>
+            </Link>
+          ))}
         </div>
       </div>
     </>

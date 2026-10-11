@@ -4,8 +4,9 @@ import { HelmetProvider } from 'react-helmet-async';
 import { LanguageProvider } from './context/LanguageContext';
 import HomePage from './pages/HomePage';
 import MapPage from './pages/MapPage';
-import './App.css';
 import FeaturesPage from './pages/FeaturesPage';
+import FeaturesMapPage from './pages/FeaturesMapPage';
+import './App.css';
 
 function App() {
   const [isAdmin, setIsAdmin] = useState(() => {
@@ -48,6 +49,13 @@ function App() {
               } />
               <Route path="/features" element={
                 <FeaturesPage
+                  isAdmin={isAdmin}
+                  onAdminLogin={handleAdminLogin}
+                  onAdminLogout={handleAdminLogout}
+                />
+              } />
+              <Route path="/features/:featureId" element={
+                <FeaturesMapPage
                   isAdmin={isAdmin}
                   onAdminLogin={handleAdminLogin}
                   onAdminLogout={handleAdminLogout}

@@ -1346,19 +1346,6 @@ ul, li {
   }
 }
 
-/* Заголовки секций на главной */
-.page-section-title {
-  width: 100%;
-  max-width: 1000px;
-  font-size: 24px;
-  font-weight: bold;
-  color: white;
-  margin-bottom: 20px;
-  margin-top: 10px;
-  text-align: left;
-}
-
-/* Большой блок "Фишки" */
 .features-block {
   display: flex;
   align-items: center;
@@ -1374,6 +1361,7 @@ ul, li {
   transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   position: relative;
   overflow: hidden;
+  min-height: 160px;
 }
 
 .features-block:hover {
@@ -1386,6 +1374,8 @@ ul, li {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
+  z-index: 2;
 }
 
 .features-block-title {
@@ -1401,34 +1391,25 @@ ul, li {
   margin: 0;
 }
 
-.features-block-arrow {
-  font-size: 40px;
-  color: #e94560;
-  font-weight: bold;
-  transition: transform 0.3s ease;
-}
-
-.features-block:hover .features-block-arrow {
-  transform: translateX(10px);
-}
-
-/* Внутренний контейнер страницы фишек */
-.features-page-inner {
-  width: 100%;
-  max-width: 1000px;
+/* Картинка в блоке "Фишки" */
+.features-block-images {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+  pointer-events: none;
+  overflow: hidden;
 }
 
 /* Мобильная версия */
 @media (max-width: 768px) {
-  .page-section-title {
-    font-size: 20px;
-    margin-bottom: 14px;
-  }
-
   .features-block {
     padding: 24px 20px;
     margin-top: 24px;
     border-radius: 12px;
+    min-height: 120px;
   }
 
   .features-block-title {
@@ -1439,7 +1420,276 @@ ul, li {
     font-size: 14px;
   }
 
-  .features-block-arrow {
-    font-size: 28px;
+  .features-block-image {
+    max-width: 55%;
+    opacity: 0.28;
   }
+
+  .features-block:hover .features-block-image {
+    opacity: 0.4;
+  }
+
+  .page-section-title {
+    font-size: 20px;
+    margin-bottom: 14px;
+    padding-left: 10px;
+  }
+}
+
+/* Заголовки секций на главной */
+.page-section-title {
+  width: 100%;
+  max-width: 1000px;
+  font-size: 26px;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 22px;
+  margin-top: 6px;
+  text-align: left;
+  padding-left: 14px;
+  position: relative;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.page-section-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 70%;
+  background-color: #e94560;
+  border-radius: 2px;
+}
+
+.features-block-image {
+  height: 100%;
+  width: auto;
+  max-width: 22%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.35;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  mask-image: linear-gradient(to right, transparent 0%, black 40%, black 60%, transparent 100%);
+}
+
+/* Контейнер с фишками */
+.features-list {
+  width: 100%;
+  max-width: 1000px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* Кнопка-фишка */
+.feature-btn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #1f3460 100%);
+  border: 2px solid #2d3748;
+  border-radius: 12px;
+  text-decoration: none;
+  color: white;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.feature-btn:hover {
+  transform: translateY(-2px);
+  border-color: #e94560;
+  box-shadow: 0 0 20px rgba(233, 69, 96, 0.35), 0 0 0 2px #e94560;
+}
+
+.feature-btn-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.feature-btn-name {
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 0.3px;
+}
+
+/* Мобилка */
+@media (max-width: 768px) {
+  .features-list {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .feature-btn {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .feature-btn-logo {
+    width: 34px;
+    height: 34px;
+  }
+
+  .feature-btn-name {
+    font-size: 16px;
+  }
+}
+
+/* Кнопка "Добавить фишку" */
+.add-feature-btn {
+  width: 100%;
+  max-width: 1000px;
+  padding: 14px;
+  margin-bottom: 20px;
+  background-color: transparent;
+  color: white;
+  border: 2px dashed #4a5568;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-feature-btn:hover {
+  border-color: #e94560;
+  background-color: rgba(233, 69, 96, 0.1);
+  color: #e94560;
+}
+
+/* Модалка формы */
+.feature-form-modal {
+  background-color: #1a1a2e;
+  border-radius: 12px;
+  padding: 30px;
+  width: 480px;
+  max-width: 90%;
+  position: relative;
+  text-align: center;
+}
+
+.feature-form-modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feature-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  font-family: inherit;
+  min-height: 100px;
+}
+
+.feature-form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.feature-form-actions .delete-line-btn {
+  margin: 0;
+}
+
+/* Карточки фишек */
+.features-cards {
+  width: 100%;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.feature-card {
+  background-color: #1a1a2e;
+  border: 2px solid #2d3748;
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+
+.feature-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.feature-card-number {
+  font-size: 14px;
+  font-weight: bold;
+  color: #e94560;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.feature-card-delete {
+  background: none;
+  border: none;
+  color: #718096;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.feature-card-delete:hover {
+  color: #e94560;
+}
+
+.feature-card-video {
+  width: 100%;
+  border-radius: 8px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.feature-card-name {
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 6px;
+}
+
+.feature-card-desc {
+  font-size: 14px;
+  color: #a0aec0;
+  line-height: 1.5;
+}
+
+/* Мобилка */
+@media (max-width: 768px) {
+  .feature-form-modal {
+    padding: 20px;
+  }
+
+  .feature-card {
+    padding: 14px 16px;
+  }
+
+  .feature-card-name {
+    font-size: 16px;
+  }
+}
+
+.feature-form-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.feature-form-actions .delete-line-btn,
+.feature-form-actions .login-btn {
+  flex: 1;
+  width: 100%;
+  margin: 0;
+  padding: 12px;
+  font-size: 15px;
+  border-radius: 8px;
 }
