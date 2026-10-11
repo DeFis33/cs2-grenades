@@ -22,14 +22,14 @@ function HomePage({ isAdmin, onAdminLogin, onAdminLogout }) {
 
   useEffect(() => {
     document.title = t('homeTitle');
-  }, [lang]);
+  }, [lang, t]);
 
   return (
     <>
       <Helmet>
         <title>{t('homeTitle')}</title>
       </Helmet>
-      <Header 
+      <Header
         isAdmin={isAdmin}
         setGuideOpen={() => {}}
         onAdminLogin={onAdminLogin}
@@ -37,6 +37,9 @@ function HomePage({ isAdmin, onAdminLogin, onAdminLogout }) {
       />
 
       <div className="home-page">
+        {/* Заголовок "Карты" */}
+        <h1 className="page-section-title">{t('mapsTitle')}</h1>
+
         <div className="maps-grid">
           {mapsList.map(map => (
             <Link
@@ -45,9 +48,9 @@ function HomePage({ isAdmin, onAdminLogin, onAdminLogout }) {
               className="map-card available"
             >
               <div className="map-card-preview">
-                <img 
-                  src={`/previews/${map.preview}`} 
-                  alt={map.name} 
+                <img
+                  src={`/previews/${map.preview}`}
+                  alt={map.name}
                   className="map-card-img"
                   onError={(e) => {
                     e.target.style.display = 'none';
@@ -59,6 +62,15 @@ function HomePage({ isAdmin, onAdminLogin, onAdminLogout }) {
             </Link>
           ))}
         </div>
+
+        {/* Большой блок "Фишки" на всю ширину */}
+        <Link to="/features" className="features-block">
+          <div className="features-block-content">
+            <h2 className="features-block-title">{t('featuresBlockTitle')}</h2>
+            <p className="features-block-desc">{t('featuresBlockDesc')}</p>
+          </div>
+          <span className="features-block-arrow">→</span>
+        </Link>
       </div>
     </>
   );

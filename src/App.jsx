@@ -5,6 +5,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import HomePage from './pages/HomePage';
 import MapPage from './pages/MapPage';
 import './App.css';
+import FeaturesPage from './pages/FeaturesPage';
 
 function App() {
   const [isAdmin, setIsAdmin] = useState(() => {
@@ -30,17 +31,24 @@ function App() {
           <div className="app">
             <Routes>
               <Route path="/" element={
-                <HomePage 
+                <HomePage
                   isAdmin={isAdmin}
                   onAdminLogin={handleAdminLogin}
                   onAdminLogout={handleAdminLogout}
                 />
               } />
               <Route path="/map/:mapId" element={
-                <MapPage 
-                  isAdmin={isAdmin} 
-                  guideOpen={guideOpen} 
+                <MapPage
+                  isAdmin={isAdmin}
+                  guideOpen={guideOpen}
                   setGuideOpen={setGuideOpen}
+                  onAdminLogin={handleAdminLogin}
+                  onAdminLogout={handleAdminLogout}
+                />
+              } />
+              <Route path="/features" element={
+                <FeaturesPage
+                  isAdmin={isAdmin}
                   onAdminLogin={handleAdminLogin}
                   onAdminLogout={handleAdminLogout}
                 />

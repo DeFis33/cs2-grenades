@@ -45,7 +45,12 @@ const translations = {
     utilityType: 'Тип гранаты:',
     reveal: 'Reveal',
     instant: 'Instant',
-    videoLabel: 'Видео:'
+    videoLabel: 'Видео:',
+    mapsTitle: 'Карты',
+    featuresTitle: 'Фишки',
+    featuresBlockTitle: 'Фишки',
+    featuresBlockDesc: 'Полезные фишки и приёмы для игры',
+    featuresPageTitle: 'CSLINEUPS - Фишки',
   },
   en: {
     maps: 'Maps',
@@ -91,7 +96,12 @@ const translations = {
     utilityType: 'Utility type:',
     reveal: 'Reveal',
     instant: 'Instant',
-    videoLabel: 'Video:'
+    videoLabel: 'Video:',
+    mapsTitle: 'Maps',
+    featuresTitle: 'Features',
+    featuresBlockTitle: 'Features',
+    featuresBlockDesc: 'Useful tips and tricks for the game',
+    featuresPageTitle: 'CSLINEUPS - Features',
   },
 };
 

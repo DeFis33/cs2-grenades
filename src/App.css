@@ -1345,3 +1345,101 @@ ul, li {
     justify-content: center;
   }
 }
+
+/* Заголовки секций на главной */
+.page-section-title {
+  width: 100%;
+  max-width: 1000px;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 20px;
+  margin-top: 10px;
+  text-align: left;
+}
+
+/* Большой блок "Фишки" */
+.features-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1000px;
+  margin-top: 40px;
+  padding: 40px 40px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #1f3460 100%);
+  border: 2px solid #2d3748;
+  border-radius: 16px;
+  text-decoration: none;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.features-block:hover {
+  transform: scale(1.02);
+  border-color: #e94560;
+  box-shadow: 0 0 30px rgba(233, 69, 96, 0.4), 0 0 0 2px #e94560;
+}
+
+.features-block-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.features-block-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+}
+
+.features-block-desc {
+  font-size: 16px;
+  color: #a0aec0;
+  margin: 0;
+}
+
+.features-block-arrow {
+  font-size: 40px;
+  color: #e94560;
+  font-weight: bold;
+  transition: transform 0.3s ease;
+}
+
+.features-block:hover .features-block-arrow {
+  transform: translateX(10px);
+}
+
+/* Внутренний контейнер страницы фишек */
+.features-page-inner {
+  width: 100%;
+  max-width: 1000px;
+}
+
+/* Мобильная версия */
+@media (max-width: 768px) {
+  .page-section-title {
+    font-size: 20px;
+    margin-bottom: 14px;
+  }
+
+  .features-block {
+    padding: 24px 20px;
+    margin-top: 24px;
+    border-radius: 12px;
+  }
+
+  .features-block-title {
+    font-size: 22px;
+  }
+
+  .features-block-desc {
+    font-size: 14px;
+  }
+
+  .features-block-arrow {
+    font-size: 28px;
+  }
+}
