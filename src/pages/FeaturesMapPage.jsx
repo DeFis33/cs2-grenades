@@ -24,8 +24,6 @@ function FeaturesMapPage({ isAdmin, onAdminLogin, onAdminLogout }) {
   const [videoUrl, setVideoUrl] = useState('');
   const [nameRu, setNameRu] = useState('');
   const [nameEn, setNameEn] = useState('');
-  const [descRu, setDescRu] = useState('');
-  const [descEn, setDescEn] = useState('');
 
   useEffect(() => {
     document.title = `${t('featuresPageTitle')} - ${feature?.name || ''}`;
@@ -89,15 +87,12 @@ function FeaturesMapPage({ isAdmin, onAdminLogin, onAdminLogout }) {
         id: Date.now(),
         videoUrl,
         name: { ru: nameRu, en: nameEn },
-        description: { ru: descRu, en: descEn },
       },
     ];
     updateFeatures(newFeatures);
     setVideoUrl('');
     setNameRu('');
     setNameEn('');
-    setDescRu('');
-    setDescEn('');
     setShowForm(false);
   };
 
@@ -106,10 +101,9 @@ function FeaturesMapPage({ isAdmin, onAdminLogin, onAdminLogout }) {
     updateFeatures(newFeatures);
   };
 
-  // Получить текст на нужном языке (с fallback)
   const getText = (obj) => {
     if (!obj) return '';
-    if (typeof obj === 'string') return obj; // старый формат
+    if (typeof obj === 'string') return obj;
     return obj[lang] || obj.ru || obj.en || '';
   };
 
@@ -181,20 +175,6 @@ function FeaturesMapPage({ isAdmin, onAdminLogin, onAdminLogout }) {
                   value={nameEn}
                   onChange={e => setNameEn(e.target.value)}
                 />
-                <textarea
-                  className="video-url-input feature-textarea"
-                  placeholder={t('featurePlaceholderDescRu')}
-                  value={descRu}
-                  onChange={e => setDescRu(e.target.value)}
-                  rows={4}
-                />
-                <textarea
-                  className="video-url-input feature-textarea"
-                  placeholder={t('featurePlaceholderDescEn')}
-                  value={descEn}
-                  onChange={e => setDescEn(e.target.value)}
-                  rows={4}
-                />
                 <div className="feature-form-actions">
                   <button type="button" className="delete-line-btn" onClick={() => setShowForm(false)}>
                     {t('cancel')}
@@ -230,7 +210,6 @@ function FeaturesMapPage({ isAdmin, onAdminLogin, onAdminLogout }) {
                   <video src={f.videoUrl} controls className="feature-card-video" />
                 )}
                 {f.name && <div className="feature-card-name">{getText(f.name)}</div>}
-                {f.description && <p className="feature-card-desc">{getText(f.description)}</p>}
               </div>
             ))}
           </div>
